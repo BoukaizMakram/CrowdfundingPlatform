@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# blender files
+*.blend
+*.blend1
+
+# animation source assets
+/public/animation/
+
+# root duplicates
+/logo.jpg
