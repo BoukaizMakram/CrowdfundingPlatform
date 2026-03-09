@@ -256,39 +256,20 @@ export async function updateUserPayoutMethod(
   userEmail?: string,
   fullName?: string
 ): Promise<boolean> {
-  // Try update first
-  const { data, error: updateError } = await supabase
+  const { error } = await supabase
     .from('users')
-    .update({
+    .upsert({
+      id: userId,
+      email: userEmail || '',
+      full_name: fullName || 'User',
       payout_method: payoutMethod,
       payout_email: payoutEmail || null,
-    })
-    .eq('id', userId)
-    .select('id')
+    }, { onConflict: 'id' })
 
-  if (updateError) {
-    console.error('Error updating payout method:', updateError)
+  if (error) {
+    console.error('Error saving payout method:', error)
     return false
   }
-
-  // If no row was updated, insert one
-  if (!data || data.length === 0) {
-    const { error: insertError } = await supabase
-      .from('users')
-      .insert({
-        id: userId,
-        email: userEmail || '',
-        full_name: fullName || 'User',
-        payout_method: payoutMethod,
-        payout_email: payoutEmail || null,
-      })
-
-    if (insertError) {
-      console.error('Error inserting user payout method:', insertError)
-      return false
-    }
-  }
-
   return true
 }
 

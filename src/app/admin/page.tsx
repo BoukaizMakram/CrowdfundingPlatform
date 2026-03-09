@@ -7,13 +7,23 @@ import Link from 'next/link'
 import {
   getAllCampaigns, getAllDonations, updateCampaignStatus, deleteCampaign,
   getDonationsByCampaign, getAllPayoutRequests, updatePayoutRequestStatus,
-  getAllUsers, getCampaignsByCreator, getDonationsByDonor, getPayoutRequestsByUser
+  getCampaignsByCreator, getDonationsByDonor, getPayoutRequestsByUser
 } from '@/lib/supabase-queries'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
-import { Campaign, Donation, PayoutRequest, PayoutRequestStatus, User } from '@/types'
+import { Campaign, Donation, PayoutRequest, PayoutRequestStatus } from '@/types'
+
+type AdminUser = {
+  id: string
+  email: string
+  full_name: string
+  phone?: string | null
+  payout_method?: string | null
+  payout_email?: string | null
+  created_at: string
+}
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || ''
 const ADMIN_PIN = '9637'
@@ -35,7 +45,7 @@ export default function AdminPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [donations, setDonations] = useState<(Donation & { campaign?: Campaign })[]>([])
   const [payoutRequests, setPayoutRequests] = useState<PayoutRequest[]>([])
-  const [users, setUsers] = useState<User[]>([])
+  const [users, setUsers] = useState<AdminUser[]>([])
   const [dataLoading, setDataLoading] = useState(true)
   const [deleteTarget, setDeleteTarget] = useState<Campaign | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -84,16 +94,16 @@ export default function AdminPage() {
   useEffect(() => {
     if (adminState !== 'verified') return
     async function fetchData() {
-      const [campaignsData, donationsData, payoutsData, usersData] = await Promise.all([
+      const [campaignsData, donationsData, payoutsData, usersRes] = await Promise.all([
         getAllCampaigns(),
         getAllDonations(),
         getAllPayoutRequests(),
-        getAllUsers(),
+        fetch('/api/admin/users').then(r => r.json()),
       ])
       setCampaigns(campaignsData)
       setDonations(donationsData)
       setPayoutRequests(payoutsData)
-      setUsers(usersData)
+      setUsers(usersRes.users || [])
       setDataLoading(false)
     }
     fetchData()

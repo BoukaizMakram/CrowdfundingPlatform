@@ -189,3 +189,26 @@ create policy "Anyone can delete campaigns"
 create policy "Anyone can delete donations"
   on public.donations for delete
   using (true);
+
+-- ═══════════════════════════════════════
+-- Auto-create public.users row on auth signup
+-- ═══════════════════════════════════════
+
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.users (id, email, full_name)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'full_name', new.email)
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
