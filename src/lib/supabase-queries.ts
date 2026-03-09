@@ -235,6 +235,20 @@ export async function getUserPayoutMethod(userId: string): Promise<{ payout_meth
   return data as { payout_method: PayoutMethod | null; payout_email: string | null }
 }
 
+export async function getDonationsByDonor(donorId: string): Promise<(Donation & { campaign?: Campaign })[]> {
+  const { data, error } = await supabase
+    .from('donations')
+    .select('*, campaign:campaigns(*)')
+    .eq('donor_id', donorId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching donor donations:', error)
+    return []
+  }
+  return data as (Donation & { campaign?: Campaign })[]
+}
+
 export async function updateUserPayoutMethod(
   userId: string,
   payoutMethod: PayoutMethod,

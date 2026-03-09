@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Campaign } from '@/types'
 import { formatCurrency } from '@/lib/utils'
+import { useAuth } from '@/contexts/AuthContext'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 
@@ -16,6 +17,7 @@ const PRESET_AMOUNTS = [25, 50, 100, 250, 500, 1000]
 const PLATFORM_FEE_RATE = 0.05
 
 export default function DonationModal({ campaign, isOpen, onClose }: DonationModalProps) {
+  const { user } = useAuth()
   const [step, setStep] = useState<'amount' | 'info' | 'payment'>('amount')
   const [amount, setAmount] = useState<number>(50)
   const [customAmount, setCustomAmount] = useState('')
@@ -29,7 +31,8 @@ export default function DonationModal({ campaign, isOpen, onClose }: DonationMod
   if (!isOpen) return null
 
   // Fee calculations
-  const platformFee = coverFee ? Math.round(amount * PLATFORM_FEE_RATE * 100) / 100 : 0
+  const platformFeeAmount = Math.round(amount * PLATFORM_FEE_RATE * 100) / 100
+  const platformFee = coverFee ? platformFeeAmount : 0
   const donorTotalPaid = Math.round((amount + platformFee) * 100) / 100
   const netToCampaign = coverFee
     ? amount
@@ -72,6 +75,7 @@ export default function DonationModal({ campaign, isOpen, onClose }: DonationMod
           isAnonymous,
           message: message.trim() || undefined,
           coverPlatformFee: coverFee,
+          donorId: user?.id || undefined,
         }),
       })
 
@@ -177,7 +181,7 @@ export default function DonationModal({ campaign, isOpen, onClose }: DonationMod
                   className="w-5 h-5 mt-0.5 rounded border-gray-300 text-[#274a34] focus:ring-[#274a34]"
                 />
                 <label htmlFor="coverFee" className="text-sm text-gray-700 leading-snug">
-                  Cover platform fee so the campaign receives the full <span className="font-semibold">{formatCurrency(amount)}</span>
+                  Cover the <span className="font-semibold">{formatCurrency(platformFeeAmount)}</span> platform fee so the campaign receives the full donation
                 </label>
               </div>
 

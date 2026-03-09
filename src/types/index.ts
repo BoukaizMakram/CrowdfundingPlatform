@@ -30,6 +30,7 @@ export type PayoutMethod = 'stripe' | 'paypal' | 'wise'
 export type Donation = {
   id: string
   campaign_id: string
+  donor_id?: string
   donor_name: string
   amount: number
   is_anonymous: boolean

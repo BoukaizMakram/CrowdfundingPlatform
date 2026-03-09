@@ -136,6 +136,12 @@ alter table public.donations
   add column if not exists donor_total_paid numeric default 0,
   add column if not exists net_to_campaign numeric default 0;
 
+-- Add donor tracking to donations
+alter table public.donations
+  add column if not exists donor_id uuid references public.users(id);
+
+create index if not exists idx_donations_donor_id on public.donations(donor_id);
+
 -- Add payout method to users
 alter table public.users
   add column if not exists payout_method text check (payout_method in ('stripe', 'paypal', 'wise')),

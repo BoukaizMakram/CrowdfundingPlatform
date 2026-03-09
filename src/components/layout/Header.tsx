@@ -8,10 +8,12 @@ import { useAuth } from '@/contexts/AuthContext'
 export default function Header() {
   const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
   const searchContainerRef = useRef<HTMLDivElement>(null)
+  const profileRef = useRef<HTMLDivElement>(null)
   const { user, loading, signOut } = useAuth()
 
   const displayName = user?.user_metadata?.full_name || user?.email || ''
@@ -35,6 +37,18 @@ export default function Header() {
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [isSearchOpen])
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setIsProfileOpen(false)
+      }
+    }
+    if (isProfileOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isProfileOpen])
 
   const handleSearchSubmit = () => {
     const q = searchQuery.trim()
@@ -93,20 +107,62 @@ export default function Header() {
             {loading ? (
               <div className="w-20 h-8" />
             ) : user ? (
-              <>
-                <Link href="/dashboard" className="px-4 py-2 text-sm font-medium text-[#274a34] hover:bg-[#edffd3] rounded-xl transition-colors">
-                  Dashboard
-                </Link>
+              <div ref={profileRef} className="relative">
                 <button
-                  onClick={signOut}
-                  className="px-4 py-2 text-sm font-medium text-[#274a34] hover:bg-[#edffd3] rounded-xl transition-colors"
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-[#edffd3] transition-colors"
                 >
-                  Sign out
+                  <div className="w-8 h-8 bg-[#274a34] rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">{initial}</span>
+                  </div>
+                  <span className="text-sm font-medium text-[#274a34] max-w-[120px] truncate">{displayName}</span>
+                  <svg className={`w-4 h-4 text-[#274a34] transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </button>
-                <div className="w-8 h-8 bg-[#274a34] rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">{initial}</span>
-                </div>
-              </>
+
+                {isProfileOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.12)] border border-gray-100 overflow-hidden z-50">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900 truncate">{displayName}</p>
+                      <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                    </div>
+                    <div className="py-1">
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-[#edffd3] transition-colors"
+                      >
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                        Dashboard
+                      </Link>
+                      <Link
+                        href="/donations/history"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-[#edffd3] transition-colors"
+                      >
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Donation History
+                      </Link>
+                    </div>
+                    <div className="border-t border-gray-100 py-1">
+                      <button
+                        onClick={() => { setIsProfileOpen(false); signOut() }}
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <>
                 <Link href="/auth/login" className="px-4 py-2 text-sm font-medium text-[#274a34] hover:bg-[#edffd3] rounded-xl transition-colors">
@@ -218,6 +274,9 @@ export default function Header() {
               <>
                 <Link href="/dashboard" className="block text-[#274a34] font-medium py-2.5 px-3 rounded-xl hover:bg-[#edffd3] transition-colors" onClick={() => setIsMenuOpen(false)}>
                   Dashboard
+                </Link>
+                <Link href="/donations/history" className="block text-[#274a34] font-medium py-2.5 px-3 rounded-xl hover:bg-[#edffd3] transition-colors" onClick={() => setIsMenuOpen(false)}>
+                  Donation History
                 </Link>
                 <button
                   onClick={() => { signOut(); setIsMenuOpen(false) }}

@@ -7,7 +7,7 @@ const STRIPE_FEE_FIXED = 0.30
 
 export async function POST(req: NextRequest) {
   try {
-    const { campaignId, campaignTitle, amount, donorName, isAnonymous, message, coverPlatformFee } = await req.json()
+    const { campaignId, campaignTitle, amount, donorName, isAnonymous, message, coverPlatformFee, donorId } = await req.json()
 
     if (!campaignId || !amount || amount <= 0) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
         stripeFee: String(stripeFeeEstimate / 100),
         donorTotalPaid: String(totalCents / 100),
         netToCampaign: String(netToCampaignCents / 100),
+        donorId: donorId || '',
       },
       success_url: `${req.nextUrl.origin}/donation/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.nextUrl.origin}/campaign/${campaignId}`,
