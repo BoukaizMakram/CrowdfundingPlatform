@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { Campaign, Donation, MediaItem, PayoutMethod } from '@/types'
+import { Campaign, Donation, MediaItem, PayoutMethod, PayoutRequest, PayoutRequestStatus, User } from '@/types'
 
 export async function getCampaigns(filter?: {
   category?: string
@@ -267,4 +267,85 @@ export async function updateUserPayoutMethod(
     return false
   }
   return true
+}
+
+// ── Payout Requests ──
+
+export async function createPayoutRequest(
+  userId: string,
+  amount: number,
+  payoutMethod: PayoutMethod,
+  payoutEmail: string
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('payout_requests')
+    .insert({ user_id: userId, amount, payout_method: payoutMethod, payout_email: payoutEmail })
+
+  if (error) {
+    console.error('Error creating payout request:', error)
+    return false
+  }
+  return true
+}
+
+export async function getPayoutRequestsByUser(userId: string): Promise<PayoutRequest[]> {
+  const { data, error } = await supabase
+    .from('payout_requests')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching payout requests:', error)
+    return []
+  }
+  return data as PayoutRequest[]
+}
+
+export async function getAllPayoutRequests(): Promise<PayoutRequest[]> {
+  const { data, error } = await supabase
+    .from('payout_requests')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching all payout requests:', error)
+    return []
+  }
+  return data as PayoutRequest[]
+}
+
+export async function updatePayoutRequestStatus(
+  id: string,
+  status: PayoutRequestStatus,
+  adminNote?: string
+): Promise<boolean> {
+  const update: Record<string, unknown> = { status, updated_at: new Date().toISOString() }
+  if (adminNote !== undefined) update.admin_note = adminNote
+
+  const { error } = await supabase
+    .from('payout_requests')
+    .update(update)
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error updating payout request:', error)
+    return false
+  }
+  return true
+}
+
+// ── Users (Admin) ──
+
+export async function getAllUsers(): Promise<User[]> {
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching users:', error)
+    return []
+  }
+  return data as User[]
 }

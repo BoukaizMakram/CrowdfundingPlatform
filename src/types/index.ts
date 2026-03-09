@@ -56,6 +56,20 @@ export type User = {
   created_at: string
 }
 
+export type PayoutRequestStatus = 'pending' | 'approved' | 'rejected' | 'completed'
+
+export type PayoutRequest = {
+  id: string
+  user_id: string
+  amount: number
+  payout_method: PayoutMethod
+  payout_email: string
+  status: PayoutRequestStatus
+  admin_note?: string
+  created_at: string
+  updated_at: string
+}
+
 export const CATEGORIES: { value: Category; label: string }[] = [
   { value: 'medical', label: 'Medical' },
   { value: 'education', label: 'Education' },
