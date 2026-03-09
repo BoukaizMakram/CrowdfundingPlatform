@@ -252,20 +252,43 @@ export async function getDonationsByDonor(donorId: string): Promise<(Donation & 
 export async function updateUserPayoutMethod(
   userId: string,
   payoutMethod: PayoutMethod,
-  payoutEmail?: string
+  payoutEmail?: string,
+  userEmail?: string,
+  fullName?: string
 ): Promise<boolean> {
-  const { error } = await supabase
+  // Try update first
+  const { data, error: updateError } = await supabase
     .from('users')
     .update({
       payout_method: payoutMethod,
       payout_email: payoutEmail || null,
     })
     .eq('id', userId)
+    .select('id')
 
-  if (error) {
-    console.error('Error updating payout method:', error)
+  if (updateError) {
+    console.error('Error updating payout method:', updateError)
     return false
   }
+
+  // If no row was updated, insert one
+  if (!data || data.length === 0) {
+    const { error: insertError } = await supabase
+      .from('users')
+      .insert({
+        id: userId,
+        email: userEmail || '',
+        full_name: fullName || 'User',
+        payout_method: payoutMethod,
+        payout_email: payoutEmail || null,
+      })
+
+    if (insertError) {
+      console.error('Error inserting user payout method:', insertError)
+      return false
+    }
+  }
+
   return true
 }
 

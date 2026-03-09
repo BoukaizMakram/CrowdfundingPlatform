@@ -25,7 +25,7 @@ export type Campaign = {
 
 export type PaymentStatus = 'pending' | 'completed' | 'failed'
 
-export type PayoutMethod = 'stripe' | 'paypal' | 'wise'
+export type PayoutMethod = 'stripe' | 'paypal' | 'wise' | 'bank_morocco'
 
 export type Donation = {
   id: string

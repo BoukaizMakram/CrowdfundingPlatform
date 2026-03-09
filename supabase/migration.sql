@@ -144,7 +144,7 @@ create index if not exists idx_donations_donor_id on public.donations(donor_id);
 
 -- Add payout method to users
 alter table public.users
-  add column if not exists payout_method text check (payout_method in ('stripe', 'paypal', 'wise')),
+  add column if not exists payout_method text check (payout_method in ('stripe', 'paypal', 'wise', 'bank_morocco')),
   add column if not exists payout_email text;
 
 -- ═══════════════════════════════════════
@@ -155,7 +155,7 @@ create table if not exists public.payout_requests (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null,
   amount numeric not null check (amount > 0),
-  payout_method text not null check (payout_method in ('stripe', 'paypal', 'wise')),
+  payout_method text not null check (payout_method in ('stripe', 'paypal', 'wise', 'bank_morocco')),
   payout_email text not null,
   status text not null default 'pending' check (status in ('pending', 'approved', 'rejected', 'completed')),
   admin_note text,
