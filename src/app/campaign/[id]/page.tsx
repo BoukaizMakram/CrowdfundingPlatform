@@ -56,7 +56,8 @@ export default function CampaignPage() {
   }
 
   const categoryLabel = CATEGORIES.find(c => c.value === campaign.category)?.label || campaign.category
-  const progress = Math.round((campaign.raised_amount / campaign.goal_amount) * 100)
+  const progress = Math.min(Math.round((campaign.raised_amount / campaign.goal_amount) * 100), 100)
+  const isCompleted = campaign.raised_amount >= campaign.goal_amount
 
   return (
     <>
@@ -187,10 +188,19 @@ export default function CampaignPage() {
                     <p className="text-sm text-gray-500">donations</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">
-                      ${Math.ceil((campaign.goal_amount - campaign.raised_amount) / 1000)}K
-                    </p>
-                    <p className="text-sm text-gray-500">to go</p>
+                    {isCompleted ? (
+                      <>
+                        <p className="text-2xl font-bold text-[#274a34]">Completed</p>
+                        <p className="text-sm text-gray-500">goal reached</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {formatCurrency(campaign.goal_amount - campaign.raised_amount)}
+                        </p>
+                        <p className="text-sm text-gray-500">to go</p>
+                      </>
+                    )}
                   </div>
                 </div>
 

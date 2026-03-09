@@ -138,7 +138,7 @@ alter table public.donations
 
 -- Add donor tracking to donations
 alter table public.donations
-  add column if not exists donor_id uuid references public.users(id);
+  add column if not exists donor_id uuid;
 
 create index if not exists idx_donations_donor_id on public.donations(donor_id);
 
