@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { Suspense, useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useSearchParams, useRouter } from 'next/navigation'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { getCampaigns } from '@/lib/supabase-queries'
@@ -32,7 +33,18 @@ function SplitWords({
 }
 
 export default function Home() {
-  const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all')
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#fafaf8]" />}>
+      <HomeContent />
+    </Suspense>
+  )
+}
+
+function HomeContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const initialCategory = (searchParams.get('category') as Category) || 'all'
+  const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>(initialCategory)
   const [allCampaigns, setAllCampaigns] = useState<Campaign[]>([])
   const [loading, setLoading] = useState(true)
   const mainRef = useRef<HTMLDivElement>(null)
@@ -343,6 +355,30 @@ export default function Home() {
       )
     }
   }, [selectedCategory])
+
+  // Sync URL and scroll to campaigns when category param is present
+  useEffect(() => {
+    if (selectedCategory !== 'all') {
+      router.replace(`/?category=${selectedCategory}`, { scroll: false })
+      // Scroll to campaigns section
+      campaignsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else {
+      const currentQ = searchParams.get('category')
+      if (currentQ) {
+        router.replace('/', { scroll: false })
+      }
+    }
+  }, [selectedCategory, router, searchParams])
+
+  // On mount, if category param exists, scroll to campaigns
+  useEffect(() => {
+    if (searchParams.get('category') && campaignsRef.current) {
+      setTimeout(() => {
+        campaignsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 500)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div ref={mainRef} className="bg-[#fafaf8]">
