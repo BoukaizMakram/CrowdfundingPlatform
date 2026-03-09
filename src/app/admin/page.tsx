@@ -423,7 +423,8 @@ export default function AdminPage() {
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Donor</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Donation</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payout Breakdown</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                     </tr>
@@ -451,8 +452,25 @@ export default function AdminPage() {
                             {donation.campaign?.title || 'Unknown'}
                           </Link>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap font-medium text-emerald-600">
-                          {formatCurrency(donation.amount)}
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="font-medium text-emerald-600">{formatCurrency(donation.amount)}</div>
+                          <div className="text-xs text-gray-400">
+                            Paid: {formatCurrency(donation.donor_total_paid || donation.amount)}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-xs space-y-0.5">
+                            <div className="text-gray-600">
+                              Platform: <span className="font-medium">{formatCurrency(donation.platform_fee || 0)}</span>
+                              {donation.cover_platform_fee && <span className="text-emerald-600 ml-1">(covered)</span>}
+                            </div>
+                            <div className="text-gray-600">
+                              Stripe: <span className="font-medium">{formatCurrency(donation.stripe_fee || 0)}</span>
+                            </div>
+                            <div className="text-[#274a34] font-medium">
+                              Net: {formatCurrency(donation.net_to_campaign || donation.amount)}
+                            </div>
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -472,7 +490,7 @@ export default function AdminPage() {
                     ))}
                     {donations.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                        <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
                           No donations yet.
                         </td>
                       </tr>

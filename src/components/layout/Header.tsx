@@ -63,7 +63,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-14 px-4 sm:px-6">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <img src="/nav-logo.png" alt="AlMakram" className="h-8" />
+            <img src="/nav-logo.png" alt="Amanatick" className="h-8" />
           </Link>
 
           {/* Center nav links */}

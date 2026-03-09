@@ -13,7 +13,7 @@ const poppins = Poppins({
 })
 
 export const metadata: Metadata = {
-  title: "AlMakram - Crowdfunding for Good",
+  title: "Amanatick - Crowdfunding for Good",
   description: "The global crowdfunding platform for charitable campaigns. Support medical needs, education, mosques, and community projects worldwide.",
 }
 

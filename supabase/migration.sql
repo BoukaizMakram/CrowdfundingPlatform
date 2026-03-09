@@ -128,6 +128,14 @@ alter table public.donations
   add column if not exists payment_status text default 'pending' check (payment_status in ('pending', 'completed', 'failed')),
   add column if not exists stripe_session_id text;
 
+-- Add fee tracking to donations
+alter table public.donations
+  add column if not exists cover_platform_fee boolean default false,
+  add column if not exists platform_fee numeric default 0,
+  add column if not exists stripe_fee numeric default 0,
+  add column if not exists donor_total_paid numeric default 0,
+  add column if not exists net_to_campaign numeric default 0;
+
 -- Add payout method to users
 alter table public.users
   add column if not exists payout_method text check (payout_method in ('stripe', 'paypal', 'wise')),

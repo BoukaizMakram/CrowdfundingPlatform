@@ -36,6 +36,11 @@ export type Donation = {
   message?: string
   payment_status: PaymentStatus
   stripe_session_id?: string
+  cover_platform_fee: boolean
+  platform_fee: number
+  stripe_fee: number
+  donor_total_paid: number
+  net_to_campaign: number
   created_at: string
 }
 

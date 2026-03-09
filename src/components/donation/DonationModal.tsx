@@ -13,7 +13,7 @@ interface DonationModalProps {
 }
 
 const PRESET_AMOUNTS = [25, 50, 100, 250, 500, 1000]
-const PLATFORM_FEE_PERCENT = 5
+const PLATFORM_FEE_RATE = 0.05
 
 export default function DonationModal({ campaign, isOpen, onClose }: DonationModalProps) {
   const [step, setStep] = useState<'amount' | 'info' | 'payment'>('amount')
@@ -22,13 +22,18 @@ export default function DonationModal({ campaign, isOpen, onClose }: DonationMod
   const [donorName, setDonorName] = useState('')
   const [isAnonymous, setIsAnonymous] = useState(false)
   const [message, setMessage] = useState('')
+  const [coverFee, setCoverFee] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
 
   if (!isOpen) return null
 
-  const platformFee = Math.round(amount * PLATFORM_FEE_PERCENT) / 100
-  const totalAmount = amount + platformFee
+  // Fee calculations
+  const platformFee = coverFee ? Math.round(amount * PLATFORM_FEE_RATE * 100) / 100 : 0
+  const donorTotalPaid = Math.round((amount + platformFee) * 100) / 100
+  const netToCampaign = coverFee
+    ? amount
+    : Math.round(amount * (1 - PLATFORM_FEE_RATE) * 100) / 100
 
   const handleAmountSelect = (value: number) => {
     setAmount(value)
@@ -66,6 +71,7 @@ export default function DonationModal({ campaign, isOpen, onClose }: DonationMod
           donorName: isAnonymous ? 'Anonymous' : donorName,
           isAnonymous,
           message: message.trim() || undefined,
+          coverPlatformFee: coverFee,
         }),
       })
 
@@ -90,6 +96,7 @@ export default function DonationModal({ campaign, isOpen, onClose }: DonationMod
     setDonorName('')
     setIsAnonymous(false)
     setMessage('')
+    setCoverFee(false)
     setError('')
     onClose()
   }
@@ -160,25 +167,47 @@ export default function DonationModal({ campaign, isOpen, onClose }: DonationMod
                 min="1"
               />
 
+              {/* Cover fee checkbox */}
+              <div className="mt-5 flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="coverFee"
+                  checked={coverFee}
+                  onChange={(e) => setCoverFee(e.target.checked)}
+                  className="w-5 h-5 mt-0.5 rounded border-gray-300 text-[#274a34] focus:ring-[#274a34]"
+                />
+                <label htmlFor="coverFee" className="text-sm text-gray-700 leading-snug">
+                  Cover platform fee so the campaign receives the full <span className="font-semibold">{formatCurrency(amount)}</span>
+                </label>
+              </div>
+
               {/* Fee breakdown */}
-              <div className="mt-6 p-4 bg-[#f7f5f2] rounded-lg space-y-2">
+              <div className="mt-4 p-4 bg-[#f7f5f2] rounded-lg space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 text-sm">Your donation</span>
                   <span className="font-medium text-gray-900">{formatCurrency(amount)}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-500 text-sm">Platform fee (5%)</span>
-                  <span className="text-gray-500 text-sm">{formatCurrency(platformFee)}</span>
-                </div>
+                {coverFee && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 text-sm">Platform fee (5%)</span>
+                    <span className="text-gray-500 text-sm">+{formatCurrency(platformFee)}</span>
+                  </div>
+                )}
                 <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
-                  <span className="font-medium text-gray-900">Total</span>
-                  <span className="text-lg font-bold text-gray-900">{formatCurrency(totalAmount)}</span>
+                  <span className="font-medium text-gray-900">You pay</span>
+                  <span className="text-lg font-bold text-gray-900">{formatCurrency(donorTotalPaid)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500 text-xs">Campaign receives</span>
+                  <span className="text-[#274a34] text-xs font-medium">{formatCurrency(netToCampaign)}</span>
                 </div>
               </div>
 
-              <p className="text-xs text-gray-400 mt-2 text-center">
-                100% of your donation goes to the campaign. The 5% fee supports platform operations.
-              </p>
+              {!coverFee && (
+                <p className="text-xs text-gray-400 mt-2 text-center">
+                  A 5% platform fee is deducted from the donation. Cover it above to give the full amount.
+                </p>
+              )}
 
               <Button className="w-full mt-6" onClick={handleNext} disabled={amount <= 0}>
                 Continue
@@ -241,13 +270,15 @@ export default function DonationModal({ campaign, isOpen, onClose }: DonationMod
                   <span className="text-gray-600 text-sm">Donation to &ldquo;{campaign.title}&rdquo;</span>
                   <span className="font-medium text-gray-900">{formatCurrency(amount)}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-500 text-sm">Platform fee (5%)</span>
-                  <span className="text-gray-500 text-sm">{formatCurrency(platformFee)}</span>
-                </div>
+                {coverFee && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 text-sm">Platform fee (5%)</span>
+                    <span className="text-gray-500 text-sm">+{formatCurrency(platformFee)}</span>
+                  </div>
+                )}
                 <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
                   <span className="font-medium text-gray-900">Total charge</span>
-                  <span className="text-lg font-bold text-gray-900">{formatCurrency(totalAmount)}</span>
+                  <span className="text-lg font-bold text-gray-900">{formatCurrency(donorTotalPaid)}</span>
                 </div>
                 <div className="flex justify-between items-center pt-1">
                   <span className="text-gray-500 text-sm">Donor</span>
@@ -281,7 +312,7 @@ export default function DonationModal({ campaign, isOpen, onClose }: DonationMod
                       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z" />
                       </svg>
-                      Pay {formatCurrency(totalAmount)}
+                      Pay {formatCurrency(donorTotalPaid)}
                     </>
                   )}
                 </button>

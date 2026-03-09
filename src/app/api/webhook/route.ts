@@ -32,13 +32,18 @@ export async function POST(req: NextRequest) {
     const isAnonymous = session.metadata?.isAnonymous === 'true'
     const message = session.metadata?.message || null
     const donationAmount = parseFloat(session.metadata?.donationAmount || '0')
+    const coverPlatformFee = session.metadata?.coverPlatformFee === 'true'
+    const platformFee = parseFloat(session.metadata?.platformFee || '0')
+    const stripeFee = parseFloat(session.metadata?.stripeFee || '0')
+    const donorTotalPaid = parseFloat(session.metadata?.donorTotalPaid || '0')
+    const netToCampaign = parseFloat(session.metadata?.netToCampaign || '0')
 
     if (!campaignId || donationAmount <= 0) {
       console.error('Invalid webhook metadata:', session.metadata)
       return NextResponse.json({ error: 'Invalid metadata' }, { status: 400 })
     }
 
-    // Create donation record
+    // Create donation record with fee breakdown
     const { error: donationError } = await supabase
       .from('donations')
       .insert({
@@ -49,6 +54,11 @@ export async function POST(req: NextRequest) {
         message,
         payment_status: 'completed',
         stripe_session_id: session.id,
+        cover_platform_fee: coverPlatformFee,
+        platform_fee: platformFee,
+        stripe_fee: stripeFee,
+        donor_total_paid: donorTotalPaid,
+        net_to_campaign: netToCampaign,
       })
 
     if (donationError) {
@@ -56,7 +66,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to create donation' }, { status: 500 })
     }
 
-    // Update campaign raised_amount
+    // Update campaign raised_amount (only the donation amount, not fees)
     const { data: campaign } = await supabase
       .from('campaigns')
       .select('raised_amount')

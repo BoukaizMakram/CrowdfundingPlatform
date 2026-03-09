@@ -80,7 +80,7 @@ export default function SignupPage() {
             </div>
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">Create an account</h1>
-          <p className="text-gray-600 mt-2">Join AlMakram and start making a difference</p>
+          <p className="text-gray-600 mt-2">Join Amanatick and start making a difference</p>
         </div>
 
         {/* Form */}
@@ -88,6 +88,11 @@ export default function SignupPage() {
           {submitError && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
               {submitError}
+              {submitError.includes('already exists') && (
+                <Link href="/auth/login" className="block mt-2 text-emerald-600 hover:text-emerald-700 font-medium underline">
+                  Go to Sign in
+                </Link>
+              )}
             </div>
           )}
 
@@ -144,11 +149,11 @@ export default function SignupPage() {
         {/* Terms */}
         <p className="text-xs text-gray-500 text-center mt-6">
           By signing up, you agree to our{' '}
-          <Link href="#" className="text-emerald-500 hover:text-emerald-600">
-            Terms of Service
+          <Link href="/terms" className="text-emerald-500 hover:text-emerald-600">
+            Terms of Use
           </Link>{' '}
           and{' '}
-          <Link href="#" className="text-emerald-500 hover:text-emerald-600">
+          <Link href="/privacy" className="text-emerald-500 hover:text-emerald-600">
             Privacy Policy
           </Link>
         </p>

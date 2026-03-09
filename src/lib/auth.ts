@@ -11,11 +11,21 @@ export async function signUp(email: string, password: string, fullName: string, 
   })
 
   if (authError) {
+    // Catch duplicate email error
+    if (authError.message.toLowerCase().includes('already registered') || authError.message.toLowerCase().includes('already been registered')) {
+      return { error: 'An account with this email already exists. Please sign in instead.' }
+    }
     return { error: authError.message }
   }
 
   if (!authData.user) {
     return { error: 'Signup failed. Please try again.' }
+  }
+
+  // Supabase may return a user but no session when email already exists (email confirmation enabled)
+  // Detect this: user has no identities = fake/duplicate user
+  if (authData.user.identities && authData.user.identities.length === 0) {
+    return { error: 'An account with this email already exists. Please sign in instead.' }
   }
 
   // 2. Create public.users row with same UUID

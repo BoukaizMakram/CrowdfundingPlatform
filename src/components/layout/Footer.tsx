@@ -16,7 +16,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-3">
-              <img src="/logo.png" alt="AlMakram" className="h-10 brightness-0 invert" />
+              <img src="/logo.png" alt="Amanatick" className="h-10 brightness-0 invert" />
             </Link>
             <p className="mt-4 text-gray-400 text-sm leading-relaxed">
               The global platform for charitable giving. Supporting communities worldwide.
@@ -50,8 +50,8 @@ export default function Footer() {
             <ul className="space-y-3">
               <li><Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors">Help center</Link></li>
               <li><Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors">Contact us</Link></li>
-              <li><Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors">Privacy</Link></li>
-              <li><Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors">Terms</Link></li>
+              <li><Link href="/privacy" className="text-gray-400 hover:text-white text-sm transition-colors">Privacy</Link></li>
+              <li><Link href="/terms" className="text-gray-400 hover:text-white text-sm transition-colors">Terms</Link></li>
             </ul>
           </div>
         </div>
@@ -59,7 +59,7 @@ export default function Footer() {
         {/* Bottom */}
         <div className="mt-16 pt-8 border-t border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-gray-500 text-sm">
-            © {new Date().getFullYear()} AlMakram. All rights reserved.
+            © {new Date().getFullYear()} Amanatick. All rights reserved.
           </p>
           <div className="flex gap-4">
             <a href="#" className="text-gray-500 hover:text-[#e4fdc0] transition-colors" aria-label="Twitter">

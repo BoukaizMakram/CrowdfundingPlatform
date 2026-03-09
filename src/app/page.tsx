@@ -366,7 +366,7 @@ export default function Home() {
           <div className="hero-logo flex items-center justify-center mb-8">
             <img
               src="/logo.png"
-              alt="AlMakram"
+              alt="Amanatick"
               className="h-28 md:h-36 object-contain"
             />
           </div>

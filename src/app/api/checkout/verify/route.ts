@@ -14,10 +14,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       status: session.payment_status,
       campaignId: session.metadata?.campaignId,
-      campaignTitle: session.line_items ? undefined : undefined,
       donorName: session.metadata?.donorName,
       donationAmount: session.metadata?.donationAmount,
       message: session.metadata?.message,
+      coverPlatformFee: session.metadata?.coverPlatformFee === 'true',
+      platformFee: session.metadata?.platformFee,
+      stripeFee: session.metadata?.stripeFee,
+      donorTotalPaid: session.metadata?.donorTotalPaid,
     })
   } catch (error) {
     console.error('Verify error:', error)

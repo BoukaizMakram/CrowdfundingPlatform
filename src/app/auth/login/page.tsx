@@ -30,7 +30,7 @@ export default function LoginPage() {
     }
 
     // Check if admin
-    if (formData.email === 'admin@almakram.com') {
+    if (formData.email === 'admin@amanatick.com') {
       router.push('/admin')
     } else {
       router.push('/dashboard')
@@ -50,7 +50,7 @@ export default function LoginPage() {
             </div>
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-          <p className="text-gray-600 mt-2">Sign in to your AlMakram account</p>
+          <p className="text-gray-600 mt-2">Sign in to your Amanatick account</p>
         </div>
 
         {/* Form */}

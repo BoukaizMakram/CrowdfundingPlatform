@@ -291,6 +291,10 @@ export default function CreateCampaignPage() {
           const result = await signUp(formData.email, formData.password, formData.fullName)
           if ('error' in result) {
             setSubmitError(result.error)
+            // Auto-switch to login mode if account already exists
+            if (result.error.includes('already exists')) {
+              setAuthMode('login')
+            }
             setIsSubmitting(false)
             return
           }
@@ -763,7 +767,7 @@ export default function CreateCampaignPage() {
 
               <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
                 <p className="text-sm text-blue-700">
-                  <span className="font-medium">Note:</span> AlMakram retains a 5% platform fee from each donation. The remaining 95% will be sent to you via your chosen payout method.
+                  <span className="font-medium">Note:</span> Amanatick retains a 5% platform fee from each donation. The remaining 95% will be sent to you via your chosen payout method.
                 </p>
               </div>
             </div>
