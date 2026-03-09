@@ -91,7 +91,7 @@ export default function CampaignPage() {
             </li>
             <li className="text-gray-400">/</li>
             <li>
-              <Link href={`/?category=${campaign.category}`} className="text-gray-500 hover:text-emerald-500">
+              <Link href={`/campaigns?category=${campaign.category}`} className="text-gray-500 hover:text-emerald-500">
                 {categoryLabel}
               </Link>
             </li>
