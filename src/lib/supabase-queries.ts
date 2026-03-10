@@ -256,21 +256,22 @@ export async function updateUserPayoutMethod(
   userEmail?: string,
   fullName?: string
 ): Promise<boolean> {
-  const { error } = await supabase
-    .from('users')
-    .upsert({
-      id: userId,
-      email: userEmail || '',
-      full_name: fullName || 'User',
-      payout_method: payoutMethod,
-      payout_email: payoutEmail || null,
-    }, { onConflict: 'id' })
-
-  if (error) {
-    console.error('Error saving payout method:', error)
+  try {
+    const res = await fetch('/api/user/payout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, payoutMethod, payoutEmail, userEmail, fullName }),
+    })
+    if (!res.ok) {
+      const data = await res.json()
+      console.error('Error saving payout method:', data)
+      return false
+    }
+    return true
+  } catch (err) {
+    console.error('Error saving payout method:', err)
     return false
   }
-  return true
 }
 
 // ── Payout Requests ──
