@@ -43,6 +43,17 @@ const STEP_HEADINGS: Record<number, { title: string; subtitle: string }> = {
   },
 }
 
+function extractYouTubeId(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+  ]
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match) return match[1]
+  }
+  return null
+}
+
 const PAYOUT_OPTIONS: { value: PayoutMethod; label: string; description: string; icon: string }[] = [
   {
     value: 'stripe',
@@ -95,6 +106,7 @@ export default function CreateCampaignPage() {
     type: 'image' | 'video'
     isCover: boolean
   }[]>([])
+  const [youtubeUrl, setYoutubeUrl] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitError, setSubmitError] = useState('')
   const [uploadProgress, setUploadProgress] = useState<{
@@ -208,6 +220,9 @@ export default function CreateCampaignPage() {
       }
       if (!mediaFiles.some(f => f.type === 'image')) {
         newErrors.coverImage = 'At least one image is required'
+      }
+      if (youtubeUrl && !extractYouTubeId(youtubeUrl)) {
+        newErrors.youtubeUrl = 'Please enter a valid YouTube URL'
       }
     } else if (currentStep === 4) {
       if (!payoutMethod) {
@@ -372,6 +387,12 @@ export default function CreateCampaignPage() {
       }
 
       setUploadProgress(null)
+
+      // Add YouTube video if provided
+      const ytId = youtubeUrl ? extractYouTubeId(youtubeUrl) : null
+      if (ytId) {
+        uploadedItems.push({ url: `https://www.youtube.com/watch?v=${ytId}`, type: 'video' })
+      }
 
       // Fallback: use first image as cover if none explicitly set
       if (coverImageUrl === '/images/placeholder.jpg') {
@@ -700,6 +721,54 @@ export default function CreateCampaignPage() {
                   {errors.coverImage && (
                     <p className="mt-1.5 text-sm text-red-500">{errors.coverImage}</p>
                   )}
+
+                  {/* YouTube video embed */}
+                  <div className="mt-5">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      YouTube Video (optional)
+                    </label>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Paste a YouTube link to embed a video in your campaign.
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        value={youtubeUrl}
+                        onChange={(e) => {
+                          setYoutubeUrl(e.target.value)
+                          setErrors(prev => ({ ...prev, youtubeUrl: '' }))
+                        }}
+                        className={`flex-1 px-3 py-2.5 text-sm border rounded-lg bg-white text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-[#274a34] focus:border-transparent ${
+                          errors.youtubeUrl ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                      />
+                      {youtubeUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setYoutubeUrl('')}
+                          className="px-3 py-2.5 text-sm text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg bg-white transition-colors"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    {errors.youtubeUrl && (
+                      <p className="mt-1.5 text-sm text-red-500">{errors.youtubeUrl}</p>
+                    )}
+                    {/* YouTube preview */}
+                    {youtubeUrl && extractYouTubeId(youtubeUrl) && (
+                      <div className="mt-3 aspect-video rounded-lg overflow-hidden border border-gray-200">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${extractYouTubeId(youtubeUrl)}`}
+                          className="w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          title="YouTube preview"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

@@ -3,6 +3,13 @@
 import { useState, useCallback } from 'react'
 import { MediaItem } from '@/types'
 
+function getYouTubeId(url: string): string | null {
+  const match = url.match(
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/
+  )
+  return match ? match[1] : null
+}
+
 interface MediaCarouselProps {
   items: MediaItem[]
   featured?: boolean
@@ -21,6 +28,7 @@ export default function MediaCarousel({ items, featured, alt }: MediaCarouselPro
   if (items.length === 0) return null
 
   const activeItem = items[activeIndex]
+  const ytId = activeItem.type === 'video' ? getYouTubeId(activeItem.url) : null
 
   return (
     <div className="relative aspect-video rounded-xl overflow-hidden mb-6 bg-black group">
@@ -29,6 +37,14 @@ export default function MediaCarousel({ items, featured, alt }: MediaCarouselPro
           src={activeItem.url}
           alt={`${alt} — photo ${activeIndex + 1}`}
           className="absolute inset-0 w-full h-full object-cover"
+        />
+      ) : ytId ? (
+        <iframe
+          src={`https://www.youtube.com/embed/${ytId}`}
+          className="absolute inset-0 w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          title={`${alt} — video`}
         />
       ) : (
         <video

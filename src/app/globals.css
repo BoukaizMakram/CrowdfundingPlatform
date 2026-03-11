@@ -74,3 +74,33 @@ body {
 ::selection {
   background: #e4fdc0;
 }
+
+/* Marquee reverse animation */
+@keyframes marqueeReverse {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Bento grid hover lift */
+.bento-big:hover,
+.bento-small:hover {
+  transform: translateY(-4px);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bento-big,
+.bento-small {
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Pin spacer fix for smooth scroll */
+.pin-spacer {
+  pointer-events: none;
+}
+.pin-spacer > * {
+  pointer-events: auto;
+}

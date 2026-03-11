@@ -20,22 +20,22 @@ export default function CampaignPage() {
   const [copied, setCopied] = useState(false)
 
   const handleShare = useCallback(async () => {
-    const url = window.location.href
+    const shortUrl = `${window.location.origin}/c/${params.id}`
     const title = campaign?.title || 'Campaign'
     const text = `Check out this campaign: ${title}`
 
     if (navigator.share) {
       try {
-        await navigator.share({ title, text, url })
+        await navigator.share({ title, text, url: shortUrl })
       } catch {
         // User cancelled or share failed silently
       }
     } else {
-      await navigator.clipboard.writeText(url)
+      await navigator.clipboard.writeText(shortUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
-  }, [campaign?.title])
+  }, [campaign?.title, params.id])
 
   useEffect(() => {
     async function fetchData() {
