@@ -288,6 +288,86 @@ function HomeContent() {
         )
       }
 
+      // ── FEATURED: Bento grid reveal ──
+      if (featuredRef.current) {
+        const featHeading = featuredRef.current.querySelector('.section-heading')
+        if (featHeading) {
+          gsap.fromTo(featHeading,
+            { clipPath: 'inset(0 100% 0 0)' },
+            {
+              clipPath: 'inset(0 0% 0 0)',
+              duration: 1.2,
+              ease: 'power3.inOut',
+              scrollTrigger: { trigger: featHeading, start: 'top 85%', toggleActions: 'play none none none' },
+            }
+          )
+        }
+
+        const bigCard = featuredRef.current.querySelector('.bento-big')
+        if (bigCard) {
+          gsap.from(bigCard, {
+            opacity: 0, x: -80, scale: 0.95, duration: 1, ease: 'power3.out',
+            scrollTrigger: { trigger: bigCard, start: 'top 85%', toggleActions: 'play none none none' },
+          })
+        }
+
+        const smallCards = featuredRef.current.querySelectorAll('.bento-small')
+        if (smallCards.length) {
+          gsap.from(smallCards, {
+            opacity: 0, x: 60, y: 30, scale: 0.92, duration: 0.8, stagger: 0.12, ease: 'power3.out',
+            scrollTrigger: { trigger: smallCards[0], start: 'top 88%', toggleActions: 'play none none none' },
+          })
+        }
+      }
+
+      // ── HOW IT WORKS: Stacked card reveal (pinned) ──
+      if (howItWorksRef.current) {
+        const hiwCards = howItWorksRef.current.querySelectorAll('.hiw-card')
+
+        hiwCards.forEach((card, i) => {
+          if (i === 0) return
+          gsap.from(card, {
+            yPercent: 100,
+            opacity: 0,
+            scale: 0.9,
+            scrollTrigger: {
+              trigger: howItWorksRef.current,
+              start: () => `top+=${i * window.innerHeight * 0.5} top`,
+              end: () => `top+=${(i + 0.5) * window.innerHeight * 0.5} top`,
+              scrub: 1,
+              invalidateOnRefresh: true,
+            },
+          })
+        })
+
+        ScrollTrigger.create({
+          trigger: howItWorksRef.current,
+          start: 'top top',
+          end: () => `+=${hiwCards.length * window.innerHeight * 0.5}`,
+          pin: true,
+          invalidateOnRefresh: true,
+        })
+      }
+
+      // ── CTA ──
+      if (ctaRef.current) {
+        const ctaWords = ctaRef.current.querySelectorAll('.split-word')
+        if (ctaWords.length) {
+          gsap.from(ctaWords, {
+            y: '100%', rotateX: -30, duration: 0.8, stagger: 0.03, ease: 'power4.out',
+            scrollTrigger: { trigger: ctaRef.current, start: 'top 80%', toggleActions: 'play none none none' },
+          })
+        }
+        gsap.from('.cta-button', {
+          opacity: 0, y: 40, scale: 0.85, duration: 1, delay: 0.2, ease: 'power3.out',
+          scrollTrigger: { trigger: ctaRef.current, start: 'top 75%', toggleActions: 'play none none none' },
+        })
+        gsap.from('.cta-subtitle', {
+          opacity: 0, y: 20, duration: 0.7, delay: 0.15, ease: 'power3.out',
+          scrollTrigger: { trigger: ctaRef.current, start: 'top 78%', toggleActions: 'play none none none' },
+        })
+      }
+
       setTimeout(() => ScrollTrigger.refresh(), 200)
     }, mainRef)
 
