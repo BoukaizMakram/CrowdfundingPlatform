@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { getUserPayoutMethod, updateUserPayoutMethod } from '@/lib/supabase-queries'
+import { getUserPayoutMethod, updateUserPayoutMethod, updateUserProfile } from '@/lib/supabase-queries'
 import { supabase } from '@/lib/supabase'
 import Button from '@/components/ui/Button'
 import { PayoutMethod } from '@/types'
@@ -45,6 +45,13 @@ export default function SettingsPage() {
   const [saveError, setSaveError] = useState('')
   const [resetSent, setResetSent] = useState(false)
   const [loading, setLoading] = useState(true)
+  // Profile fields
+  const [profileName, setProfileName] = useState('')
+  const [profileBio, setProfileBio] = useState('')
+  const [profilePhone, setProfilePhone] = useState('')
+  const [profileSaving, setProfileSaving] = useState(false)
+  const [profileSaved, setProfileSaved] = useState(false)
+  const [profileError, setProfileError] = useState('')
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -54,15 +61,23 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!user) return
-    async function fetchPayout() {
-      const data = await getUserPayoutMethod(user!.id)
-      if (data) {
-        setPayoutMethod(data.payout_method || '')
-        setPayoutEmail(data.payout_email || '')
+    async function fetchData() {
+      const [payoutData, profileData] = await Promise.all([
+        getUserPayoutMethod(user!.id),
+        supabase.from('users').select('full_name, bio, phone').eq('id', user!.id).single(),
+      ])
+      if (payoutData) {
+        setPayoutMethod(payoutData.payout_method || '')
+        setPayoutEmail(payoutData.payout_email || '')
+      }
+      if (profileData.data) {
+        setProfileName(profileData.data.full_name || '')
+        setProfileBio(profileData.data.bio || '')
+        setProfilePhone(profileData.data.phone || '')
       }
       setLoading(false)
     }
-    fetchPayout()
+    fetchData()
   }, [user])
 
   const handleSavePayout = async () => {
@@ -86,6 +101,32 @@ export default function SettingsPage() {
       setTimeout(() => setSaved(false), 2000)
     } else {
       setSaveError('Failed to save. Please try again.')
+    }
+  }
+
+  const handleSaveProfile = async () => {
+    if (!user) return
+    if (!profileName.trim()) {
+      setProfileError('Name is required')
+      return
+    }
+    setProfileSaving(true)
+    setProfileError('')
+    const success = await updateUserProfile(user.id, {
+      full_name: profileName.trim(),
+      bio: profileBio.trim() || undefined,
+      phone: profilePhone.trim() || undefined,
+    })
+    // Also sync auth metadata so Header updates
+    if (success) {
+      await supabase.auth.updateUser({ data: { full_name: profileName.trim() } })
+    }
+    setProfileSaving(false)
+    if (success) {
+      setProfileSaved(true)
+      setTimeout(() => setProfileSaved(false), 2000)
+    } else {
+      setProfileError('Failed to save. Please try again.')
     }
   }
 
@@ -143,12 +184,43 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-              <div className="px-4 py-2.5 bg-gray-50 rounded-xl text-sm text-gray-900">{displayName}</div>
+              <input
+                type="text"
+                value={profileName}
+                onChange={(e) => { setProfileName(e.target.value); setProfileError('') }}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#274a34] focus:border-transparent"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <div className="px-4 py-2.5 bg-gray-50 rounded-xl text-sm text-gray-900">{user?.email}</div>
+              <div className="px-4 py-2.5 bg-gray-50 rounded-xl text-sm text-gray-500">{user?.email}</div>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+              <textarea
+                value={profileBio}
+                onChange={(e) => { setProfileBio(e.target.value); setProfileError('') }}
+                placeholder="Tell others about yourself..."
+                rows={3}
+                maxLength={300}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#274a34] focus:border-transparent resize-none"
+              />
+              <p className="text-xs text-gray-400 mt-1">{profileBio.length}/300</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone (optional)</label>
+              <input
+                type="tel"
+                value={profilePhone}
+                onChange={(e) => { setProfilePhone(e.target.value); setProfileError('') }}
+                placeholder="+1 234 567 8900"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#274a34] focus:border-transparent"
+              />
+            </div>
+            {profileError && <p className="text-sm text-red-600">{profileError}</p>}
+            <Button onClick={handleSaveProfile} disabled={profileSaving}>
+              {profileSaving ? 'Saving...' : profileSaved ? 'Saved!' : 'Save Profile'}
+            </Button>
           </div>
         </div>
 

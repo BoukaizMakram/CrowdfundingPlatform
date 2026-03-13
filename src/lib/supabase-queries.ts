@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { Campaign, Donation, MediaItem, PayoutMethod, PayoutRequest, PayoutRequestStatus, User } from '@/types'
+import { Campaign, Donation, MediaItem, PayoutMethod, PayoutRequest, PayoutRequestStatus, User, Visit } from '@/types'
 
 export async function getCampaigns(filter?: {
   category?: string
@@ -353,4 +353,65 @@ export async function getAllUsers(): Promise<User[]> {
     return []
   }
   return data as User[]
+}
+
+// ── Profile ──
+
+export async function getUserById(userId: string): Promise<User | null> {
+  const { data, error } = await supabase
+    .from('users')
+    .select('id, email, full_name, bio, phone, created_at')
+    .eq('id', userId)
+    .single()
+
+  if (error) {
+    console.error('Error fetching user:', error)
+    return null
+  }
+  return data as User
+}
+
+export async function updateUserProfile(
+  userId: string,
+  updates: { full_name?: string; bio?: string; phone?: string }
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('users')
+    .update(updates)
+    .eq('id', userId)
+
+  if (error) {
+    console.error('Error updating profile:', error)
+    return false
+  }
+  return true
+}
+
+// ── Visit Tracking ──
+
+export async function trackVisit(visit: {
+  utm_source?: string
+  utm_medium?: string
+  utm_campaign?: string
+  referrer?: string
+  page: string
+  user_agent?: string
+  device?: string
+  timezone?: string
+}): Promise<void> {
+  await supabase.from('visits').insert(visit)
+}
+
+export async function getAllVisits(): Promise<Visit[]> {
+  const { data, error } = await supabase
+    .from('visits')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(5000)
+
+  if (error) {
+    console.error('Error fetching visits:', error)
+    return []
+  }
+  return data as Visit[]
 }

@@ -1,9 +1,11 @@
 import type { Metadata } from "next"
+import { Suspense } from "react"
 import { Poppins } from "next/font/google"
 import "./globals.css"
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import SmoothScroll from "@/components/SmoothScroll"
+import UTMTracker from "@/components/UTMTracker"
 import { AuthProvider } from "@/contexts/AuthContext"
 
 const poppins = Poppins({
@@ -28,6 +30,9 @@ export default function RootLayout({
         <AuthProvider>
           <SmoothScroll />
           <Header />
+          <Suspense fallback={null}>
+            <UTMTracker />
+          </Suspense>
           <main className="flex-1">{children}</main>
           <Footer />
         </AuthProvider>

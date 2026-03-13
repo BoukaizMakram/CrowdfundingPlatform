@@ -7,13 +7,14 @@ import Link from 'next/link'
 import {
   getAllCampaigns, getAllDonations, updateCampaignStatus, deleteCampaign,
   getDonationsByCampaign, getAllPayoutRequests, updatePayoutRequestStatus,
-  getCampaignsByCreator, getDonationsByDonor, getPayoutRequestsByUser
+  getCampaignsByCreator, getDonationsByDonor, getPayoutRequestsByUser,
+  getAllVisits
 } from '@/lib/supabase-queries'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
-import { Campaign, Donation, PayoutRequest, PayoutRequestStatus } from '@/types'
+import { Campaign, Donation, PayoutRequest, PayoutRequestStatus, Visit } from '@/types'
 
 type AdminUser = {
   id: string
@@ -29,7 +30,7 @@ const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || ''
 const ADMIN_PIN = '9637'
 
 type AdminState = 'checking' | 'unauthorized' | 'pin' | 'verified'
-type Tab = 'campaigns' | 'donations' | 'payouts' | 'users'
+type Tab = 'campaigns' | 'donations' | 'payouts' | 'users' | 'traffic'
 type CampaignFilter = 'all' | 'pending' | 'approved' | 'rejected'
 
 export default function AdminPage() {
@@ -46,6 +47,7 @@ export default function AdminPage() {
   const [donations, setDonations] = useState<(Donation & { campaign?: Campaign })[]>([])
   const [payoutRequests, setPayoutRequests] = useState<PayoutRequest[]>([])
   const [users, setUsers] = useState<AdminUser[]>([])
+  const [visits, setVisits] = useState<Visit[]>([])
   const [dataLoading, setDataLoading] = useState(true)
   const [deleteTarget, setDeleteTarget] = useState<Campaign | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -94,16 +96,18 @@ export default function AdminPage() {
   useEffect(() => {
     if (adminState !== 'verified') return
     async function fetchData() {
-      const [campaignsData, donationsData, payoutsData, usersRes] = await Promise.all([
+      const [campaignsData, donationsData, payoutsData, usersRes, visitsData] = await Promise.all([
         getAllCampaigns(),
         getAllDonations(),
         getAllPayoutRequests(),
         fetch('/api/admin/users').then(r => r.json()),
+        getAllVisits(),
       ])
       setCampaigns(campaignsData)
       setDonations(donationsData)
       setPayoutRequests(payoutsData)
       setUsers(usersRes.users || [])
+      setVisits(visitsData)
       setDataLoading(false)
     }
     fetchData()
@@ -303,6 +307,7 @@ export default function AdminPage() {
             { key: 'donations', label: 'Donations' },
             { key: 'payouts', label: 'Payouts', badge: stats.pendingPayouts },
             { key: 'users', label: 'Users' },
+            { key: 'traffic', label: 'Traffic' },
           ] as { key: Tab; label: string; badge?: number }[]).map(tab => (
             <button
               key={tab.key}
@@ -630,6 +635,12 @@ export default function AdminPage() {
                               </div>
                             )}
                           </div>
+                          {/* View Profile Link */}
+                          <div className="flex justify-end pt-3 border-t border-gray-100">
+                            <Link href={`/profile/${u.id}`} className="text-xs text-[#274a34] hover:underline font-medium" target="_blank">
+                              View Public Profile &rarr;
+                            </Link>
+                          </div>
                         </div>
                       ) : null}
                     </div>
@@ -638,6 +649,179 @@ export default function AdminPage() {
               ))}
             </div>
           )}
+
+          {/* ═══ Traffic Tab ═══ */}
+          {activeTab === 'traffic' && (() => {
+            const countByField = (arr: Visit[], field: keyof Visit) => {
+              const map: Record<string, number> = {}
+              arr.forEach(v => {
+                const key = (v[field] as string) || '(direct)'
+                map[key] = (map[key] || 0) + 1
+              })
+              return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 10)
+            }
+            const topSources = countByField(visits.filter(v => v.utm_source), 'utm_source')
+            const topMediums = countByField(visits.filter(v => v.utm_medium), 'utm_medium')
+            const topPages = countByField(visits, 'page')
+            const topDevices = countByField(visits.filter(v => v.device), 'device')
+            const topTimezones = countByField(visits.filter(v => v.timezone), 'timezone')
+            const todayCount = visits.filter(v => new Date(v.created_at).toDateString() === new Date().toDateString()).length
+            const utmCount = visits.filter(v => v.utm_source).length
+
+            return (
+              <div>
+                {/* Summary stats */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                  <div className="bg-white border border-gray-200 rounded-xl p-4">
+                    <p className="text-sm text-gray-500">Total Visits</p>
+                    <p className="text-2xl font-bold text-gray-900">{visits.length.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-xl p-4">
+                    <p className="text-sm text-gray-500">UTM Tracked</p>
+                    <p className="text-2xl font-bold text-[#274a34]">{utmCount.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-xl p-4">
+                    <p className="text-sm text-gray-500">Unique Sources</p>
+                    <p className="text-2xl font-bold text-gray-900">{new Set(visits.filter(v => v.utm_source).map(v => v.utm_source)).size}</p>
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-xl p-4">
+                    <p className="text-sm text-gray-500">Today</p>
+                    <p className="text-2xl font-bold text-gray-900">{todayCount}</p>
+                  </div>
+                </div>
+
+                {/* Top Sources + Top Mediums */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                  <div className="bg-white border border-gray-200 rounded-xl p-5">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-4">Top Sources</h3>
+                    {topSources.length === 0 ? (
+                      <p className="text-xs text-gray-400">No UTM sources tracked yet.</p>
+                    ) : topSources.map(([label, count], i) => (
+                      <div key={label} className="flex items-center gap-3 mb-2.5">
+                        <span className="text-xs w-4 text-gray-400 font-mono">{i + 1}</span>
+                        <div className="flex-1 bg-gray-100 rounded-full h-2">
+                          <div className="bg-[#274a34] h-2 rounded-full" style={{ width: `${(count / (topSources[0]?.[1] || 1)) * 100}%` }} />
+                        </div>
+                        <span className="text-xs font-medium text-gray-700 w-20 truncate">{label}</span>
+                        <span className="text-xs text-gray-500 w-8 text-right">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-xl p-5">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-4">Top Mediums</h3>
+                    {topMediums.length === 0 ? (
+                      <p className="text-xs text-gray-400">No UTM mediums tracked yet.</p>
+                    ) : topMediums.map(([label, count], i) => (
+                      <div key={label} className="flex items-center gap-3 mb-2.5">
+                        <span className="text-xs w-4 text-gray-400 font-mono">{i + 1}</span>
+                        <div className="flex-1 bg-gray-100 rounded-full h-2">
+                          <div className="bg-[#274a34] h-2 rounded-full" style={{ width: `${(count / (topMediums[0]?.[1] || 1)) * 100}%` }} />
+                        </div>
+                        <span className="text-xs font-medium text-gray-700 w-20 truncate">{label}</span>
+                        <span className="text-xs text-gray-500 w-8 text-right">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Top Pages */}
+                <div className="bg-white border border-gray-200 rounded-xl p-5 mb-8">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4">Top Pages</h3>
+                  {topPages.map(([label, count], i) => (
+                    <div key={label} className="flex items-center gap-3 mb-2.5">
+                      <span className="text-xs w-4 text-gray-400 font-mono">{i + 1}</span>
+                      <div className="flex-1 bg-gray-100 rounded-full h-2">
+                        <div className="bg-[#274a34] h-2 rounded-full" style={{ width: `${(count / (topPages[0]?.[1] || 1)) * 100}%` }} />
+                      </div>
+                      <span className="text-xs font-medium text-gray-700 w-28 truncate font-mono">{label}</span>
+                      <span className="text-xs text-gray-500 w-8 text-right">{count}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Devices + Timezones */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                  <div className="bg-white border border-gray-200 rounded-xl p-5">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-4">Devices</h3>
+                    {topDevices.length === 0 ? (
+                      <p className="text-xs text-gray-400">No device data yet.</p>
+                    ) : topDevices.map(([label, count], i) => (
+                      <div key={label} className="flex items-center gap-3 mb-2.5">
+                        <span className="text-xs w-4 text-gray-400 font-mono">{i + 1}</span>
+                        <div className="flex-1 bg-gray-100 rounded-full h-2">
+                          <div className="bg-[#274a34] h-2 rounded-full" style={{ width: `${(count / (topDevices[0]?.[1] || 1)) * 100}%` }} />
+                        </div>
+                        <span className="text-xs font-medium text-gray-700 w-20 truncate">{label}</span>
+                        <span className="text-xs text-gray-500 w-8 text-right">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-xl p-5">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-4">Top Timezones</h3>
+                    {topTimezones.length === 0 ? (
+                      <p className="text-xs text-gray-400">No timezone data yet.</p>
+                    ) : topTimezones.map(([label, count], i) => (
+                      <div key={label} className="flex items-center gap-3 mb-2.5">
+                        <span className="text-xs w-4 text-gray-400 font-mono">{i + 1}</span>
+                        <div className="flex-1 bg-gray-100 rounded-full h-2">
+                          <div className="bg-[#274a34] h-2 rounded-full" style={{ width: `${(count / (topTimezones[0]?.[1] || 1)) * 100}%` }} />
+                        </div>
+                        <span className="text-xs font-medium text-gray-700 w-28 truncate">{label.replace(/_/g, ' ')}</span>
+                        <span className="text-xs text-gray-500 w-8 text-right">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Recent Visits table */}
+                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="px-5 py-4 border-b border-gray-100">
+                    <h3 className="text-sm font-semibold text-gray-700">Recent Visits</h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Page</th>
+                          <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
+                          <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Medium</th>
+                          <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Campaign</th>
+                          <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Referrer</th>
+                          <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Device</th>
+                          <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timezone</th>
+                          <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {visits.slice(0, 50).map(v => (
+                          <tr key={v.id}>
+                            <td className="px-5 py-3 text-xs text-gray-900 font-mono max-w-[120px] truncate">{v.page}</td>
+                            <td className="px-5 py-3 text-xs">
+                              {v.utm_source
+                                ? <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">{v.utm_source}</span>
+                                : <span className="text-gray-400">&mdash;</span>
+                              }
+                            </td>
+                            <td className="px-5 py-3 text-xs text-gray-600">{v.utm_medium || '\u2014'}</td>
+                            <td className="px-5 py-3 text-xs text-gray-600 max-w-[100px] truncate">{v.utm_campaign || '\u2014'}</td>
+                            <td className="px-5 py-3 text-xs text-gray-500 max-w-[120px] truncate">
+                              {v.referrer ? (() => { try { return new URL(v.referrer).hostname } catch { return v.referrer } })() : '\u2014'}
+                            </td>
+                            <td className="px-5 py-3 text-xs text-gray-600">{v.device || '\u2014'}</td>
+                            <td className="px-5 py-3 text-xs text-gray-500 max-w-[140px] truncate">{v.timezone?.replace(/_/g, ' ') || '\u2014'}</td>
+                            <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">{formatDate(v.created_at)}</td>
+                          </tr>
+                        ))}
+                        {visits.length === 0 && (
+                          <tr><td colSpan={8} className="px-5 py-12 text-center text-gray-500">No visits tracked yet.</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
         </>
       )}
 

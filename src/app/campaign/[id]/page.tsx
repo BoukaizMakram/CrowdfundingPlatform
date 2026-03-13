@@ -119,7 +119,14 @@ export default function CampaignPage() {
               {campaign.title}
             </h1>
             <p className="text-gray-600 mb-6">
-              Created by <span className="font-medium text-gray-900">{campaign.creator_name}</span>
+              Created by{' '}
+              {campaign.creator_id ? (
+                <Link href={`/profile/${campaign.creator_id}`} className="font-medium text-gray-900 hover:text-[#274a34] transition-colors">
+                  {campaign.creator_name}
+                </Link>
+              ) : (
+                <span className="font-medium text-gray-900">{campaign.creator_name}</span>
+              )}
               {' · '}
               <span className="text-gray-500">{formatDate(campaign.created_at)}</span>
             </p>

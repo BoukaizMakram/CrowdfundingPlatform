@@ -50,9 +50,23 @@ export type User = {
   email: string
   full_name: string
   phone?: string
+  bio?: string
   is_admin: boolean
   payout_method?: PayoutMethod
   payout_email?: string
+  created_at: string
+}
+
+export type Visit = {
+  id: string
+  utm_source?: string
+  utm_medium?: string
+  utm_campaign?: string
+  referrer?: string
+  page: string
+  user_agent?: string
+  device?: string
+  timezone?: string
   created_at: string
 }
 
