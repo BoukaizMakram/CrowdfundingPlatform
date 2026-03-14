@@ -117,21 +117,9 @@ export default function CampaignPage() {
             />
 
             {/* Title & Creator */}
-            <div className="flex items-start justify-between gap-4 mb-2">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                {campaign.title}
-              </h1>
-              {user?.id === campaign.creator_id && (
-                <Link href={`/campaign/${campaign.id}/edit`} className="flex-shrink-0 mt-1">
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Edit
-                  </button>
-                </Link>
-              )}
-            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              {campaign.title}
+            </h1>
             <p className="text-gray-600 mb-6">
               Created by{' '}
               {campaign.creator_id ? (
@@ -241,14 +229,25 @@ export default function CampaignPage() {
                   </div>
                 </div>
 
-                {/* Donate Button */}
-                <Button
-                  size="lg"
-                  className="w-full mb-4"
-                  onClick={() => setShowDonationModal(true)}
-                >
-                  Donate Now
-                </Button>
+                {/* Donate / Edit Button */}
+                {user?.id === campaign.creator_id ? (
+                  <Link href={`/campaign/${campaign.id}/edit`} className="block mb-4">
+                    <Button size="lg" className="w-full">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit Campaign
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button
+                    size="lg"
+                    className="w-full mb-4"
+                    onClick={() => setShowDonationModal(true)}
+                  >
+                    Donate Now
+                  </Button>
+                )}
 
                 {/* Share */}
                 <Button variant="outline" size="lg" className="w-full" onClick={handleShare}>
