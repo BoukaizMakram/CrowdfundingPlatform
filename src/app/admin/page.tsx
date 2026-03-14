@@ -63,6 +63,12 @@ export default function AdminPage() {
   } | null>(null)
   const [userDetailsLoading, setUserDetailsLoading] = useState(false)
 
+  // Traffic filters
+  const [trafficDateRange, setTrafficDateRange] = useState<'today' | '7d' | '30d' | 'all'>('all')
+  const [trafficDevice, setTrafficDevice] = useState<string>('all')
+  const [trafficSource, setTrafficSource] = useState<string>('all')
+  const [trafficPageSearch, setTrafficPageSearch] = useState('')
+
   // Payout admin notes
   const [noteInputs, setNoteInputs] = useState<Record<string, string>>({})
 
@@ -688,6 +694,35 @@ export default function AdminPage() {
 
           {/* ═══ Traffic Tab ═══ */}
           {activeTab === 'traffic' && (() => {
+            // Apply filters
+            const now = new Date()
+            const filteredVisits = visits.filter(v => {
+              // Date range filter
+              if (trafficDateRange !== 'all') {
+                const visitDate = new Date(v.created_at)
+                if (trafficDateRange === 'today') {
+                  if (visitDate.toDateString() !== now.toDateString()) return false
+                } else if (trafficDateRange === '7d') {
+                  const daysAgo = new Date(now); daysAgo.setDate(daysAgo.getDate() - 7)
+                  if (visitDate < daysAgo) return false
+                } else if (trafficDateRange === '30d') {
+                  const daysAgo = new Date(now); daysAgo.setDate(daysAgo.getDate() - 30)
+                  if (visitDate < daysAgo) return false
+                }
+              }
+              // Device filter
+              if (trafficDevice !== 'all' && (v.device || '') !== trafficDevice) return false
+              // UTM source filter
+              if (trafficSource !== 'all') {
+                if (trafficSource === '(direct)') {
+                  if (v.utm_source) return false
+                } else if (v.utm_source !== trafficSource) return false
+              }
+              // Page search
+              if (trafficPageSearch && !v.page?.toLowerCase().includes(trafficPageSearch.toLowerCase())) return false
+              return true
+            })
+
             const countByField = (arr: Visit[], field: keyof Visit) => {
               const map: Record<string, number> = {}
               arr.forEach(v => {
@@ -696,21 +731,93 @@ export default function AdminPage() {
               })
               return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 10)
             }
-            const topSources = countByField(visits.filter(v => v.utm_source), 'utm_source')
-            const topMediums = countByField(visits.filter(v => v.utm_medium), 'utm_medium')
-            const topPages = countByField(visits, 'page')
-            const topDevices = countByField(visits.filter(v => v.device), 'device')
-            const topTimezones = countByField(visits.filter(v => v.timezone), 'timezone')
-            const todayCount = visits.filter(v => new Date(v.created_at).toDateString() === new Date().toDateString()).length
-            const utmCount = visits.filter(v => v.utm_source).length
+            const topSources = countByField(filteredVisits.filter(v => v.utm_source), 'utm_source')
+            const topMediums = countByField(filteredVisits.filter(v => v.utm_medium), 'utm_medium')
+            const topPages = countByField(filteredVisits, 'page')
+            const topDevices = countByField(filteredVisits.filter(v => v.device), 'device')
+            const topTimezones = countByField(filteredVisits.filter(v => v.timezone), 'timezone')
+            const todayCount = filteredVisits.filter(v => new Date(v.created_at).toDateString() === now.toDateString()).length
+            const utmCount = filteredVisits.filter(v => v.utm_source).length
+
+            // Unique sources for dropdown
+            const uniqueSources = Array.from(new Set(visits.filter(v => v.utm_source).map(v => v.utm_source!)))
+            const uniqueDevices = Array.from(new Set(visits.filter(v => v.device).map(v => v.device!)))
 
             return (
               <div>
+                {/* Filters */}
+                <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-medium text-gray-500 uppercase">Period</label>
+                      <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+                        {([['today', 'Today'], ['7d', '7 Days'], ['30d', '30 Days'], ['all', 'All Time']] as const).map(([val, label]) => (
+                          <button
+                            key={val}
+                            onClick={() => setTrafficDateRange(val)}
+                            className={`px-3 py-1.5 text-xs font-medium transition-colors ${trafficDateRange === val ? 'bg-[#274a34] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-medium text-gray-500 uppercase">Device</label>
+                      <select
+                        value={trafficDevice}
+                        onChange={e => setTrafficDevice(e.target.value)}
+                        className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#274a34]"
+                      >
+                        <option value="all">All Devices</option>
+                        {uniqueDevices.map(d => <option key={d} value={d}>{d}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-medium text-gray-500 uppercase">Source</label>
+                      <select
+                        value={trafficSource}
+                        onChange={e => setTrafficSource(e.target.value)}
+                        className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#274a34]"
+                      >
+                        <option value="all">All Sources</option>
+                        <option value="(direct)">Direct</option>
+                        {uniqueSources.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-medium text-gray-500 uppercase">Page</label>
+                      <input
+                        type="text"
+                        value={trafficPageSearch}
+                        onChange={e => setTrafficPageSearch(e.target.value)}
+                        placeholder="Search pages..."
+                        className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-700 w-36 focus:outline-none focus:ring-1 focus:ring-[#274a34]"
+                      />
+                    </div>
+
+                    {(trafficDateRange !== 'all' || trafficDevice !== 'all' || trafficSource !== 'all' || trafficPageSearch) && (
+                      <button
+                        onClick={() => { setTrafficDateRange('all'); setTrafficDevice('all'); setTrafficSource('all'); setTrafficPageSearch('') }}
+                        className="text-xs text-red-500 hover:text-red-700 font-medium ml-auto"
+                      >
+                        Clear Filters
+                      </button>
+                    )}
+                  </div>
+                  {(trafficDateRange !== 'all' || trafficDevice !== 'all' || trafficSource !== 'all' || trafficPageSearch) && (
+                    <p className="text-xs text-gray-400 mt-2">Showing {filteredVisits.length.toLocaleString()} of {visits.length.toLocaleString()} visits</p>
+                  )}
+                </div>
+
                 {/* Summary stats */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
                   <div className="bg-white border border-gray-200 rounded-xl p-4">
                     <p className="text-sm text-gray-500">Total Visits</p>
-                    <p className="text-2xl font-bold text-gray-900">{visits.length.toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-gray-900">{filteredVisits.length.toLocaleString()}</p>
                   </div>
                   <div className="bg-white border border-gray-200 rounded-xl p-4">
                     <p className="text-sm text-gray-500">UTM Tracked</p>
@@ -718,7 +825,7 @@ export default function AdminPage() {
                   </div>
                   <div className="bg-white border border-gray-200 rounded-xl p-4">
                     <p className="text-sm text-gray-500">Unique Sources</p>
-                    <p className="text-2xl font-bold text-gray-900">{new Set(visits.filter(v => v.utm_source).map(v => v.utm_source)).size}</p>
+                    <p className="text-2xl font-bold text-gray-900">{new Set(filteredVisits.filter(v => v.utm_source).map(v => v.utm_source)).size}</p>
                   </div>
                   <div className="bg-white border border-gray-200 rounded-xl p-4">
                     <p className="text-sm text-gray-500">Today</p>
@@ -829,7 +936,7 @@ export default function AdminPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
-                        {visits.slice(0, 50).map(v => (
+                        {filteredVisits.slice(0, 50).map(v => (
                           <tr key={v.id}>
                             <td className="px-5 py-3 text-xs text-gray-900 font-mono max-w-[120px] truncate">{v.page}</td>
                             <td className="px-5 py-3 text-xs">
@@ -848,7 +955,7 @@ export default function AdminPage() {
                             <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">{formatDate(v.created_at)}</td>
                           </tr>
                         ))}
-                        {visits.length === 0 && (
+                        {filteredVisits.length === 0 && (
                           <tr><td colSpan={8} className="px-5 py-12 text-center text-gray-500">No visits tracked yet.</td></tr>
                         )}
                       </tbody>
