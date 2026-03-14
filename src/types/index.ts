@@ -70,6 +70,17 @@ export type Visit = {
   created_at: string
 }
 
+export type CampaignEdit = {
+  id: string
+  campaign_id: string
+  title: string
+  description: string
+  cover_image_url: string
+  media_urls: MediaItem[]
+  status: 'pending' | 'approved' | 'rejected'
+  created_at: string
+}
+
 export type PayoutRequestStatus = 'pending' | 'approved' | 'rejected' | 'completed'
 
 export type PayoutRequest = {

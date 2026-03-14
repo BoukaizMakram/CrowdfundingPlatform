@@ -148,7 +148,7 @@ export default function PrivacyPage() {
               <li><strong>Withdrawal of consent:</strong> Withdraw consent where processing is based on consent.</li>
             </ul>
             <p>
-              To exercise any of these rights, please contact us at <strong>support@amanatick.com</strong>. We will respond to your request within 30 days.
+              To exercise any of these rights, please contact us at <strong>contact@amanatick.com</strong>. We will respond to your request within 30 days.
             </p>
           </section>
 
@@ -187,7 +187,7 @@ export default function PrivacyPage() {
             </p>
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-3">
               <p className="font-medium text-gray-900">Amanatick</p>
-              <p>Email: <strong>support@amanatick.com</strong></p>
+              <p>Email: <strong>contact@amanatick.com</strong></p>
             </div>
           </section>
 

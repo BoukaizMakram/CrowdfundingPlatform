@@ -64,7 +64,7 @@ export default function SupportPage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Still need help?</h2>
           <p className="text-sm text-gray-500 mb-4">Our support team is here to assist you.</p>
           <a
-            href="mailto:support@amanatick.com"
+            href="mailto:contact@amanatick.com"
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#274a34] text-white font-medium text-sm rounded-xl hover:bg-[#1d3827] transition-colors"
           >
             Contact Support

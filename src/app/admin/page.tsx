@@ -8,13 +8,13 @@ import {
   getAllCampaigns, getAllDonations, updateCampaignStatus, deleteCampaign,
   getDonationsByCampaign, getAllPayoutRequests, updatePayoutRequestStatus,
   getCampaignsByCreator, getDonationsByDonor, getPayoutRequestsByUser,
-  getAllVisits
+  getAllVisits, getPendingEdits, approveCampaignEdit, rejectCampaignEdit
 } from '@/lib/supabase-queries'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
-import { Campaign, Donation, PayoutRequest, PayoutRequestStatus, Visit } from '@/types'
+import { Campaign, CampaignEdit, Donation, PayoutRequest, PayoutRequestStatus, Visit } from '@/types'
 
 type AdminUser = {
   id: string
@@ -48,6 +48,8 @@ export default function AdminPage() {
   const [payoutRequests, setPayoutRequests] = useState<PayoutRequest[]>([])
   const [users, setUsers] = useState<AdminUser[]>([])
   const [visits, setVisits] = useState<Visit[]>([])
+  const [pendingEdits, setPendingEdits] = useState<CampaignEdit[]>([])
+  const [reviewingEdit, setReviewingEdit] = useState<CampaignEdit | null>(null)
   const [dataLoading, setDataLoading] = useState(true)
   const [deleteTarget, setDeleteTarget] = useState<Campaign | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -96,18 +98,20 @@ export default function AdminPage() {
   useEffect(() => {
     if (adminState !== 'verified') return
     async function fetchData() {
-      const [campaignsData, donationsData, payoutsData, usersRes, visitsData] = await Promise.all([
+      const [campaignsData, donationsData, payoutsData, usersRes, visitsData, editsData] = await Promise.all([
         getAllCampaigns(),
         getAllDonations(),
         getAllPayoutRequests(),
         fetch('/api/admin/users').then(r => r.json()),
         getAllVisits(),
+        getPendingEdits(),
       ])
       setCampaigns(campaignsData)
       setDonations(donationsData)
       setPayoutRequests(payoutsData)
       setUsers(usersRes.users || [])
       setVisits(visitsData)
+      setPendingEdits(editsData)
       setDataLoading(false)
     }
     fetchData()
@@ -176,6 +180,27 @@ export default function AdminPage() {
     const success = await updatePayoutRequestStatus(id, status, note)
     if (success) {
       setPayoutRequests(prev => prev.map(r => r.id === id ? { ...r, status, admin_note: note || r.admin_note, updated_at: new Date().toISOString() } : r))
+    }
+  }
+
+  const handleEditAction = async (editId: string, action: 'approve' | 'reject') => {
+    const success = action === 'approve'
+      ? await approveCampaignEdit(editId)
+      : await rejectCampaignEdit(editId)
+
+    if (success) {
+      const edit = pendingEdits.find(e => e.id === editId)
+      setPendingEdits(prev => prev.filter(e => e.id !== editId))
+      setReviewingEdit(null)
+
+      // If approved, update the campaign in local state
+      if (action === 'approve' && edit) {
+        setCampaigns(prev => prev.map(c =>
+          c.id === edit.campaign_id
+            ? { ...c, title: edit.title, description: edit.description, cover_image_url: edit.cover_image_url, media_urls: edit.media_urls }
+            : c
+        ))
+      }
     }
   }
 
@@ -303,7 +328,7 @@ export default function AdminPage() {
       <div className="border-b border-gray-200 mb-6">
         <nav className="flex gap-8">
           {([
-            { key: 'campaigns', label: 'Campaigns' },
+            { key: 'campaigns', label: 'Campaigns', badge: stats.pendingCampaigns + pendingEdits.length },
             { key: 'donations', label: 'Donations' },
             { key: 'payouts', label: 'Payouts', badge: stats.pendingPayouts },
             { key: 'users', label: 'Users' },
@@ -371,13 +396,24 @@ export default function AdminPage() {
                             {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
                           </span>
                         </div>
-                        <div className="mt-4 flex gap-3">
+                        <div className="mt-4 flex flex-wrap gap-3">
                           {campaign.status === 'pending' && (
                             <>
                               <Button size="sm" onClick={() => handleCampaignAction(campaign.id, 'approve')}>Approve</Button>
                               <Button variant="outline" size="sm" onClick={() => handleCampaignAction(campaign.id, 'reject')} className="text-red-500 border-red-500 hover:bg-red-50">Reject</Button>
                             </>
                           )}
+                          {(() => {
+                            const edit = pendingEdits.find(e => e.campaign_id === campaign.id)
+                            return edit ? (
+                              <button
+                                onClick={() => setReviewingEdit(edit)}
+                                className="px-3 py-1.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition-colors"
+                              >
+                                Review Pending Edit
+                              </button>
+                            ) : null
+                          })()}
                           <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(campaign)} className="text-red-400 hover:text-red-600 hover:bg-red-50 ml-auto">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -824,6 +860,100 @@ export default function AdminPage() {
           })()}
         </>
       )}
+
+      {/* Edit Review Modal */}
+      {reviewingEdit && (() => {
+        const currentCampaign = campaigns.find(c => c.id === reviewingEdit.campaign_id)
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 overflow-y-auto py-8">
+            <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+                <h3 className="text-lg font-bold text-gray-900">Review Pending Edit</h3>
+                <button onClick={() => setReviewingEdit(null)} className="text-gray-400 hover:text-gray-600">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Current */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-500 uppercase mb-3">Current</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-xs text-gray-400 mb-1">Title</p>
+                        <p className="text-sm font-medium text-gray-900">{currentCampaign?.title || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400 mb-1">Cover Image</p>
+                        {currentCampaign?.cover_image_url && (
+                          <img src={currentCampaign.cover_image_url} alt="" className="w-full aspect-video object-cover rounded-lg" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400 mb-1">Description</p>
+                        <div className="prose prose-sm max-w-none text-gray-700 bg-gray-50 rounded-lg p-3 max-h-60 overflow-y-auto" dangerouslySetInnerHTML={{ __html: currentCampaign?.description || '' }} />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400 mb-1">Media ({currentCampaign?.media_urls?.length || 0})</p>
+                        <div className="grid grid-cols-4 gap-1">
+                          {currentCampaign?.media_urls?.filter(m => m.type === 'image').slice(0, 8).map((m, i) => (
+                            <img key={i} src={m.url} alt="" className="aspect-square object-cover rounded" />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Proposed */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-amber-600 uppercase mb-3">Proposed Changes</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-xs text-gray-400 mb-1">Title</p>
+                        <p className={`text-sm font-medium ${reviewingEdit.title !== currentCampaign?.title ? 'text-amber-700 bg-amber-50 px-2 py-1 rounded' : 'text-gray-900'}`}>
+                          {reviewingEdit.title}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400 mb-1">Cover Image</p>
+                        <img src={reviewingEdit.cover_image_url} alt="" className={`w-full aspect-video object-cover rounded-lg ${reviewingEdit.cover_image_url !== currentCampaign?.cover_image_url ? 'ring-2 ring-amber-400' : ''}`} />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400 mb-1">Description</p>
+                        <div className={`prose prose-sm max-w-none text-gray-700 rounded-lg p-3 max-h-60 overflow-y-auto ${reviewingEdit.description !== currentCampaign?.description ? 'bg-amber-50 ring-1 ring-amber-200' : 'bg-gray-50'}`} dangerouslySetInnerHTML={{ __html: reviewingEdit.description }} />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400 mb-1">Media ({reviewingEdit.media_urls?.length || 0})</p>
+                        <div className="grid grid-cols-4 gap-1">
+                          {reviewingEdit.media_urls?.filter(m => m.type === 'image').slice(0, 8).map((m, i) => (
+                            <img key={i} src={m.url} alt="" className="aspect-square object-cover rounded" />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-8 pt-4 border-t border-gray-200">
+                  <Button variant="outline" className="flex-1" onClick={() => setReviewingEdit(null)}>Cancel</Button>
+                  <button
+                    onClick={() => handleEditAction(reviewingEdit.id, 'reject')}
+                    className="flex-1 px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-xl hover:bg-red-600 transition-colors"
+                  >
+                    Reject Changes
+                  </button>
+                  <Button className="flex-1" onClick={() => handleEditAction(reviewingEdit.id, 'approve')}>
+                    Approve Changes
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Delete Confirmation Modal */}
       {deleteTarget && (

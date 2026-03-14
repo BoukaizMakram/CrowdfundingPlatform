@@ -10,7 +10,7 @@ import { signUp, signIn } from '@/lib/auth'
 import { useAuth } from '@/contexts/AuthContext'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
-import Textarea from '@/components/ui/Textarea'
+import RichTextEditor from '@/components/ui/RichTextEditor'
 
 const STEPS = [
   { id: 1, title: 'Category' },
@@ -248,9 +248,10 @@ export default function CreateCampaignPage() {
       if (!formData.title.trim()) {
         newErrors.title = 'Title is required'
       }
-      if (!formData.description.trim()) {
+      const plainText = formData.description.replace(/<[^>]*>/g, '').trim()
+      if (!plainText || formData.description === '<p></p>') {
         newErrors.description = 'Description is required'
-      } else if (formData.description.length < 100) {
+      } else if (plainText.length < 100) {
         newErrors.description = 'Description must be at least 100 characters'
       }
       if (!mediaFiles.some(f => f.type === 'image')) {
@@ -642,18 +643,14 @@ export default function CreateCampaignPage() {
                   />
 
                   <div>
-                    <Textarea
-                      label="Tell your story"
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tell your story</label>
+                    <RichTextEditor
+                      content={formData.description}
+                      onChange={(html) => setFormData({ ...formData, description: html })}
                       placeholder="Explain why you're raising funds, how the money will be used, and why people should support your cause..."
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      error={errors.description}
-                      className="min-h-[220px]"
                     />
-                    {formData.description.length > 0 && (
-                      <p className={`text-xs mt-1 ${formData.description.length < 100 ? 'text-amber-500' : 'text-gray-400'}`}>
-                        {formData.description.length}/100 minimum characters
-                      </p>
+                    {errors.description && (
+                      <p className="mt-1.5 text-sm text-red-500">{errors.description}</p>
                     )}
                   </div>
 

@@ -134,13 +134,10 @@ export default function CampaignPage() {
             {/* Story */}
             <div className="bg-white border border-gray-200 rounded-xl p-6 mb-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Story</h2>
-              <div className="prose prose-gray max-w-none break-words overflow-hidden">
-                {campaign.description.split('\n\n').map((paragraph, index) => (
-                  <p key={index} className="text-gray-700 mb-4 last:mb-0 break-words">
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
+              <div
+                className="prose prose-gray max-w-none break-words overflow-hidden"
+                dangerouslySetInnerHTML={{ __html: campaign.description }}
+              />
             </div>
 
             {/* Donations List */}

@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { Campaign, Donation, MediaItem, PayoutMethod, PayoutRequest, PayoutRequestStatus, User, Visit } from '@/types'
+import { Campaign, CampaignEdit, Donation, MediaItem, PayoutMethod, PayoutRequest, PayoutRequestStatus, User, Visit } from '@/types'
 
 export async function getCampaigns(filter?: {
   category?: string
@@ -382,6 +382,115 @@ export async function updateUserProfile(
 
   if (error) {
     console.error('Error updating profile:', error)
+    return false
+  }
+  return true
+}
+
+// ── Campaign Edits ──
+
+export async function createCampaignEdit(edit: {
+  campaign_id: string
+  title: string
+  description: string
+  cover_image_url: string
+  media_urls: MediaItem[]
+}): Promise<{ id: string } | { error: string }> {
+  const { data, error } = await supabase
+    .from('campaign_edits')
+    .insert({ ...edit, status: 'pending' })
+    .select('id')
+    .single()
+
+  if (error) {
+    console.error('Error creating campaign edit:', error)
+    return { error: error.message }
+  }
+  return { id: data.id }
+}
+
+export async function getPendingEdits(): Promise<CampaignEdit[]> {
+  const { data, error } = await supabase
+    .from('campaign_edits')
+    .select('*')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching pending edits:', error)
+    return []
+  }
+  return data as CampaignEdit[]
+}
+
+export async function getPendingEditForCampaign(campaignId: string): Promise<CampaignEdit | null> {
+  const { data, error } = await supabase
+    .from('campaign_edits')
+    .select('*')
+    .eq('campaign_id', campaignId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) {
+    console.error('Error fetching pending edit:', error)
+    return null
+  }
+  return data as CampaignEdit | null
+}
+
+export async function approveCampaignEdit(editId: string): Promise<boolean> {
+  // Fetch the edit
+  const { data: edit, error: fetchError } = await supabase
+    .from('campaign_edits')
+    .select('*')
+    .eq('id', editId)
+    .single()
+
+  if (fetchError || !edit) {
+    console.error('Error fetching edit:', fetchError)
+    return false
+  }
+
+  // Update the campaign with edit fields
+  const { error: updateError } = await supabase
+    .from('campaigns')
+    .update({
+      title: edit.title,
+      description: edit.description,
+      cover_image_url: edit.cover_image_url,
+      media_urls: edit.media_urls,
+    })
+    .eq('id', edit.campaign_id)
+
+  if (updateError) {
+    console.error('Error updating campaign:', updateError)
+    return false
+  }
+
+  // Mark edit as approved
+  const { error: statusError } = await supabase
+    .from('campaign_edits')
+    .update({ status: 'approved' })
+    .eq('id', editId)
+
+  if (statusError) {
+    console.error('Error updating edit status:', statusError)
+    return false
+  }
+
+  return true
+}
+
+export async function rejectCampaignEdit(editId: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('campaign_edits')
+    .update({ status: 'rejected' })
+    .eq('id', editId)
+
+  if (error) {
+    console.error('Error rejecting edit:', error)
     return false
   }
   return true

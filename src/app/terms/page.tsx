@@ -184,7 +184,7 @@ export default function TermsPage() {
               <li>The Donor contacts us within 7 days of the donation with a valid reason.</li>
             </ul>
             <p>
-              To request a refund, please contact us at <strong>support@amanatick.com</strong>. Refund requests are reviewed on a case-by-case basis.
+              To request a refund, please contact us at <strong>contact@amanatick.com</strong>. Refund requests are reviewed on a case-by-case basis.
             </p>
           </section>
 
@@ -303,7 +303,7 @@ export default function TermsPage() {
             </p>
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-3">
               <p className="font-medium text-gray-900">Amanatick</p>
-              <p>Email: <strong>support@amanatick.com</strong></p>
+              <p>Email: <strong>contact@amanatick.com</strong></p>
             </div>
           </section>
 

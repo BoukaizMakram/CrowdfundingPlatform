@@ -115,7 +115,9 @@ export default function CampaignsPage() {
                     <Link href={`/campaign/${campaign.id}`}>
                       <Button variant="outline" size="sm">View</Button>
                     </Link>
-                    <Button variant="ghost" size="sm">Edit</Button>
+                    <Link href={`/campaign/${campaign.id}/edit`}>
+                      <Button variant="ghost" size="sm">Edit</Button>
+                    </Link>
                   </div>
                 </div>
               </div>
