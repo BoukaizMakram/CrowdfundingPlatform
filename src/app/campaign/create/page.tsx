@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { CATEGORIES, Category, MediaItem, PayoutMethod } from '@/types'
@@ -107,6 +107,7 @@ export default function CreateCampaignPage() {
     isCover: boolean
   }[]>([])
   const [youtubeUrl, setYoutubeUrl] = useState('')
+  const dropZoneRef = useRef<HTMLDivElement>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitError, setSubmitError] = useState('')
   const [uploadProgress, setUploadProgress] = useState<{
@@ -195,6 +196,40 @@ export default function CreateCampaignPage() {
       prev.map((item, i) => ({ ...item, isCover: i === index && item.type === 'image' }))
     )
   }
+
+  const handlePaste = useCallback((e: React.ClipboardEvent | ClipboardEvent) => {
+    const items = (e as ClipboardEvent).clipboardData?.items || (e as React.ClipboardEvent).clipboardData?.items
+    if (!items) return
+
+    const imageFiles: File[] = []
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile()
+        if (file) imageFiles.push(file)
+      }
+    }
+
+    if (imageFiles.length === 0) return
+    e.preventDefault()
+    setErrors(prev => ({ ...prev, coverImage: '' }))
+
+    const newItems = imageFiles.map(file => ({
+      file,
+      previewUrl: URL.createObjectURL(file),
+      type: 'image' as const,
+      isCover: false,
+    }))
+
+    setMediaFiles(prev => {
+      const combined = [...prev, ...newItems].slice(0, 10)
+      if (!combined.some(f => f.isCover)) {
+        const firstImg = combined.findIndex(f => f.type === 'image')
+        if (firstImg !== -1) combined[firstImg] = { ...combined[firstImg], isCover: true }
+      }
+      return combined
+    })
+  }, [])
 
   const validateStep = (currentStep: number) => {
     const newErrors: Record<string, string> = {}
@@ -643,18 +678,23 @@ export default function CreateCampaignPage() {
                   </p>
 
                   {/* Upload drop zone */}
-                  <label
-                    className={`flex flex-col items-center justify-center w-full py-6 border-2 border-dashed rounded-xl cursor-pointer transition-colors mb-3 ${
+                  <div
+                    ref={dropZoneRef}
+                    tabIndex={0}
+                    onPaste={handlePaste}
+                    className={`flex flex-col items-center justify-center w-full py-6 border-2 border-dashed rounded-xl cursor-pointer transition-colors mb-3 focus:outline-none focus:ring-2 focus:ring-[#274a34] ${
                       errors.coverImage
                         ? 'border-red-400 bg-red-50'
                         : 'border-gray-300 hover:border-[#274a34] bg-white'
                     }`}
+                    onClick={() => dropZoneRef.current?.querySelector('input')?.click()}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') dropZoneRef.current?.querySelector('input')?.click() }}
                   >
                     <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     <p className="text-sm text-gray-600 font-medium">Click to add photos or video</p>
-                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, MP4, WebM</p>
+                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, MP4, WebM — or paste from clipboard (Ctrl+V)</p>
                     <input
                       type="file"
                       className="hidden"
@@ -662,7 +702,7 @@ export default function CreateCampaignPage() {
                       multiple
                       onChange={handleMediaAdd}
                     />
-                  </label>
+                  </div>
 
                   {/* Thumbnail grid */}
                   {mediaFiles.length > 0 && (
