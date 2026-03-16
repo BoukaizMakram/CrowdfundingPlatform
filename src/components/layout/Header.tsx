@@ -22,8 +22,13 @@ export default function Header() {
 
   const isHomePage = pathname === '/'
 
-  const displayName = user?.user_metadata?.full_name || user?.email || ''
-  const initial = displayName ? displayName[0].toUpperCase() : '?'
+  const fullName = user?.user_metadata?.full_name || user?.email || ''
+  const initial = fullName ? fullName[0].toUpperCase() : '?'
+  // Format as "FirstName L."
+  const nameParts = fullName.trim().split(/\s+/)
+  const displayName = nameParts.length > 1
+    ? `${nameParts[0]} ${nameParts[nameParts.length - 1][0]}.`
+    : nameParts[0]
 
   // Set GSAP initial state BEFORE paint to prevent layout shift
   // useLayoutEffect runs synchronously after DOM update but before browser paint
