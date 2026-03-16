@@ -10,7 +10,7 @@ import CampaignCard from '@/components/campaign/CampaignCard'
 export default function CampaignsPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#fafaf8] pt-28 pb-16">
+      <div className="min-h-screen bg-[#fafaf8] pt-16 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="animate-pulse space-y-6">
             <div className="h-10 bg-gray-200 rounded w-64" />
@@ -82,7 +82,7 @@ function CampaignsContent() {
   const allCategories = [{ value: 'all' as const, label: 'All' }, ...CATEGORIES]
 
   return (
-    <div className="min-h-screen bg-[#fafaf8] pt-28 pb-16">
+    <div className="min-h-screen bg-[#fafaf8] pt-16 pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-10">

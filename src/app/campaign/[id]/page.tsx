@@ -55,7 +55,7 @@ export default function CampaignPage() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 pt-24 pb-16 text-center">
+      <div className="max-w-7xl mx-auto px-4 pt-4 pb-16 text-center">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto" />
           <div className="h-64 bg-gray-200 rounded-xl" />
@@ -66,7 +66,7 @@ export default function CampaignPage() {
 
   if (!campaign) {
     return (
-      <div className="max-w-7xl mx-auto px-4 pt-24 pb-16 text-center">
+      <div className="max-w-7xl mx-auto px-4 pt-4 pb-16 text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Campaign Not Found</h1>
         <p className="text-gray-600 mb-8">The campaign you&apos;re looking for doesn&apos;t exist.</p>
         <Link href="/">
@@ -82,7 +82,7 @@ export default function CampaignPage() {
 
   return (
     <>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-8">
         {/* Breadcrumb */}
         <nav className="mb-6">
           <ol className="flex items-center gap-2 text-sm">

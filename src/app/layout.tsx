@@ -33,7 +33,7 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <UTMTracker />
           </Suspense>
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 pt-[5.5rem]">{children}</main>
           <Footer />
         </AuthProvider>
       </body>

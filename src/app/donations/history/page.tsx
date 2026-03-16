@@ -33,7 +33,7 @@ export default function DonationHistoryPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-[#fafaf8] pt-28 px-4">
+      <div className="min-h-screen bg-[#fafaf8] pt-8 px-4">
         <div className="max-w-3xl mx-auto">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-gray-200 rounded w-48" />
@@ -50,7 +50,7 @@ export default function DonationHistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fafaf8] pt-28 pb-16 px-4">
+    <div className="min-h-screen bg-[#fafaf8] pt-8 pb-16 px-4">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Donation History</h1>
         <p className="text-gray-500 text-sm mb-8">Your past donations and contributions</p>

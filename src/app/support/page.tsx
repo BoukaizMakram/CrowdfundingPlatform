@@ -31,7 +31,7 @@ const faqs = [
 
 export default function SupportPage() {
   return (
-    <div className="min-h-screen bg-[#fafaf8] pt-28 pb-16 px-4">
+    <div className="min-h-screen bg-[#fafaf8] pt-8 pb-16 px-4">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Support</h1>
         <p className="text-gray-500 text-sm mb-8">Find answers or get in touch</p>

@@ -249,7 +249,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
 
   if (loading || authLoading) {
     return (
-      <div className="min-h-[calc(100vh-5rem)] pt-28 px-4 max-w-3xl mx-auto">
+      <div className="min-h-[calc(100vh-5rem)] pt-8 px-4 max-w-3xl mx-auto">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/3" />
           <div className="h-4 bg-gray-200 rounded w-1/2" />
@@ -261,7 +261,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
 
   if (isSuccess) {
     return (
-      <div className="min-h-[calc(100vh-5rem)] pt-28 flex items-center justify-center px-4">
+      <div className="min-h-[calc(100vh-5rem)] pt-8 flex items-center justify-center px-4">
         <div className="max-w-md text-center">
           <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -288,7 +288,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
   const keptExisting = existingMedia.filter(m => !removedMediaUrls.has(m.url))
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] pt-28 pb-16 px-4 max-w-3xl mx-auto">
+    <div className="min-h-[calc(100vh-5rem)] pt-8 pb-16 px-4 max-w-3xl mx-auto">
       <div className="mb-8">
         <Link href="/dashboard/campaigns" className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-block">&larr; Back to campaigns</Link>
         <h1 className="text-2xl font-bold text-gray-900">Edit Campaign</h1>

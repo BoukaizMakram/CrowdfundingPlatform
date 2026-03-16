@@ -1,12 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useRef, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import gsap from 'gsap'
 
 export default function Header() {
   const router = useRouter()
+  const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -14,14 +16,159 @@ export default function Header() {
   const searchInputRef = useRef<HTMLInputElement>(null)
   const searchContainerRef = useRef<HTMLDivElement>(null)
   const profileRef = useRef<HTMLDivElement>(null)
+  const navRef = useRef<HTMLElement>(null)
+  const headerRef = useRef<HTMLElement>(null)
   const { user, loading, signOut } = useAuth()
+
+  const isHomePage = pathname === '/'
 
   const displayName = user?.user_metadata?.full_name || user?.email || ''
   const initial = displayName ? displayName[0].toUpperCase() : '?'
 
+  // Set GSAP initial state BEFORE paint to prevent layout shift
+  // useLayoutEffect runs synchronously after DOM update but before browser paint
+  const isLayoutReady = useRef(false)
+  useLayoutEffect(() => {
+    if (!navRef.current || !headerRef.current) return
+    const nav = navRef.current
+
+    if (isHomePage) {
+      nav.style.backdropFilter = 'none'
+      nav.style.webkitBackdropFilter = 'none'
+      gsap.set(nav, {
+        backgroundColor: 'rgba(255,255,255,0)',
+        boxShadow: '0 0px 0px rgba(0,0,0,0)',
+        borderColor: 'rgba(243,244,246,0)',
+      })
+      nav.querySelectorAll('.nav-link-bold').forEach(el => {
+        gsap.set(el, { opacity: 1 })
+      })
+      nav.querySelectorAll('.nav-link-normal').forEach(el => {
+        gsap.set(el, { opacity: 0 })
+      })
+    } else {
+      nav.style.backdropFilter = 'blur(12px)'
+      nav.style.webkitBackdropFilter = 'blur(12px)'
+      gsap.set(nav, {
+        backgroundColor: 'rgba(255,255,255,0.92)',
+        boxShadow: '0 2px 20px rgba(0,0,0,0.08)',
+        borderColor: 'rgba(243,244,246,0.5)',
+      })
+      nav.querySelectorAll('.nav-link-bold').forEach(el => {
+        gsap.set(el, { opacity: 0 })
+      })
+      nav.querySelectorAll('.nav-link-normal').forEach(el => {
+        gsap.set(el, { opacity: 1 })
+      })
+    }
+
+    // If page loaded scrolled, apply scrolled state immediately
+    if (window.scrollY > 50) {
+      nav.style.backdropFilter = 'blur(12px)'
+      nav.style.webkitBackdropFilter = 'blur(12px)'
+      gsap.set(nav, {
+        backgroundColor: 'rgba(255,255,255,0.92)',
+        boxShadow: '0 2px 20px rgba(0,0,0,0.08)',
+        borderColor: 'rgba(243,244,246,0.5)',
+      })
+      gsap.set(headerRef.current, { paddingTop: '0.75rem' })
+      nav.querySelectorAll('.nav-link-bold').forEach(el => {
+        gsap.set(el, { opacity: 0 })
+      })
+      nav.querySelectorAll('.nav-link-normal').forEach(el => {
+        gsap.set(el, { opacity: 1 })
+      })
+    }
+
+    isLayoutReady.current = true
+  }, [isHomePage])
+
+  // GSAP scroll animation: transparent at top → solid pill on scroll
   useEffect(() => {
-    if (isSearchOpen && searchInputRef.current) {
-      searchInputRef.current.focus()
+    if (!navRef.current || !headerRef.current) return
+
+    const nav = navRef.current
+    const header = headerRef.current
+    let scrolled = window.scrollY > 50
+
+    const onScroll = () => {
+      const y = window.scrollY
+      const shouldBeScrolled = y > 50
+
+      if (shouldBeScrolled === scrolled) return
+      scrolled = shouldBeScrolled
+
+      if (shouldBeScrolled) {
+        nav.style.backdropFilter = 'blur(12px)'
+        nav.style.webkitBackdropFilter = 'blur(12px)'
+        gsap.to(nav, {
+          backgroundColor: 'rgba(255,255,255,0.92)',
+          boxShadow: '0 2px 20px rgba(0,0,0,0.08)',
+          borderColor: 'rgba(243,244,246,0.5)',
+          duration: 0.5,
+          ease: 'power3.out',
+        })
+        gsap.to(header, {
+          paddingTop: '0.75rem',
+          duration: 0.5,
+          ease: 'power3.out',
+        })
+        nav.querySelectorAll('.nav-link-bold').forEach(el => {
+          gsap.to(el, { opacity: 0, duration: 0.3, ease: 'power2.out' })
+        })
+        nav.querySelectorAll('.nav-link-normal').forEach(el => {
+          gsap.to(el, { opacity: 1, duration: 0.3, delay: 0.15, ease: 'power2.in' })
+        })
+      } else {
+        if (isHomePage) {
+          nav.style.backdropFilter = 'none'
+          nav.style.webkitBackdropFilter = 'none'
+        }
+        gsap.to(nav, {
+          backgroundColor: isHomePage ? 'rgba(255,255,255,0)' : 'rgba(255,255,255,0.92)',
+          boxShadow: isHomePage ? '0 0px 0px rgba(0,0,0,0)' : '0 2px 20px rgba(0,0,0,0.08)',
+          borderColor: isHomePage ? 'rgba(243,244,246,0)' : 'rgba(243,244,246,0.5)',
+          duration: 0.5,
+          ease: 'power3.out',
+        })
+        gsap.to(header, {
+          paddingTop: '1rem',
+          duration: 0.5,
+          ease: 'power3.out',
+        })
+        if (isHomePage) {
+          nav.querySelectorAll('.nav-link-bold').forEach(el => {
+            gsap.to(el, { opacity: 1, duration: 0.3, delay: 0.15, ease: 'power2.in' })
+          })
+          nav.querySelectorAll('.nav-link-normal').forEach(el => {
+            gsap.to(el, { opacity: 0, duration: 0.3, ease: 'power2.out' })
+          })
+        }
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [isHomePage])
+
+  // Animate search overlay open/close
+  useEffect(() => {
+    if (!searchContainerRef.current) return
+    const el = searchContainerRef.current
+
+    if (isSearchOpen) {
+      el.style.pointerEvents = 'auto'
+      gsap.fromTo(el,
+        { opacity: 0, scale: 0.92 },
+        { opacity: 1, scale: 1, duration: 0.35, ease: 'power3.out', onComplete: () => {
+          searchInputRef.current?.focus()
+        }}
+      )
+    } else {
+      gsap.to(el, {
+        opacity: 0, scale: 0.95, duration: 0.25, ease: 'power2.in',
+        onComplete: () => { el.style.pointerEvents = 'none' }
+      })
     }
   }, [isSearchOpen])
 
@@ -71,51 +218,91 @@ export default function Header() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 pt-4">
+    <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 pt-4">
       {/* Floating pill navbar */}
-      <nav className="max-w-6xl mx-auto bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_2px_20px_rgba(0,0,0,0.08)] border border-gray-100/50 relative">
-        <div className="flex items-center justify-between h-14 px-4 sm:px-6">
+      <nav
+        ref={navRef}
+        className="max-w-6xl mx-auto rounded-2xl border relative"
+        suppressHydrationWarning
+        style={{
+          backgroundColor: isHomePage ? 'rgba(255,255,255,0)' : 'rgba(255,255,255,0.92)',
+          boxShadow: isHomePage ? 'none' : '0 2px 20px rgba(0,0,0,0.08)',
+          borderColor: isHomePage ? 'transparent' : 'rgba(243,244,246,0.5)',
+          backdropFilter: isHomePage ? 'none' : 'blur(12px)',
+          WebkitBackdropFilter: isHomePage ? 'none' : 'blur(12px)',
+        }}
+      >
+        <div className="flex items-center justify-between md:justify-start h-14 px-4 sm:px-6 relative">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <img src="/nav-logo.png" alt="Amanatick" className="h-8" />
           </Link>
 
-          {/* Center nav links */}
-          <div className="hidden md:flex items-center gap-1">
-            <Link href="/campaigns" className="px-4 py-2 text-sm font-medium text-[#274a34] hover:bg-[#edffd3] rounded-xl transition-colors">
-              Donate
-            </Link>
-            <Link href="/campaign/create" className="px-4 py-2 text-sm font-medium text-[#274a34] hover:bg-[#edffd3] rounded-xl transition-colors">
-              FundRaise
-            </Link>
+          {/* Mobile menu button - placed early with order-last + ml-auto for instant right positioning */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden ml-auto p-2 -mr-1 text-[#274a34] hover:bg-[#edffd3]/60 rounded-xl transition-colors"
+            aria-label="Menu"
+          >
+            {isMenuOpen ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
+
+          {/* Nav links + centered search: use flex-1 sections to mirror spacing */}
+          <div className="hidden md:flex items-center flex-1 justify-end gap-1">
+            {[
+              { href: '/campaigns', label: 'Donate' },
+              { href: '/campaign/create', label: 'FundRaise' },
+            ].map(({ href, label }) => (
+              <Link key={href} href={href} className="relative px-4 py-2 text-sm text-[#274a34] hover:bg-[#edffd3]/60 rounded-xl transition-colors">
+                <span className="nav-link-bold font-bold">{label}</span>
+                <span className="nav-link-normal font-medium absolute inset-0 flex items-center justify-center">{label}</span>
+              </Link>
+            ))}
+          </div>
+
+          {/* Centered search button */}
+          <div className="hidden md:flex mx-4">
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="p-2 text-[#274a34] hover:bg-[#edffd3] rounded-full transition-colors"
+              className="p-2 text-[#274a34] hover:bg-[#edffd3]/60 rounded-full transition-colors cursor-pointer"
               aria-label="Search"
             >
               <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
-            <Link href="#" className="px-4 py-2 text-sm font-medium text-[#274a34] hover:bg-[#edffd3] rounded-xl transition-colors">
-              About
-            </Link>
           </div>
 
-          {/* Right side - Desktop */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* Right nav links (after search) + auth */}
+          <div className="hidden md:flex items-center flex-1 gap-1">
+            <Link href="#" className="relative px-4 py-2 text-sm text-[#274a34] hover:bg-[#edffd3]/60 rounded-xl transition-colors">
+              <span className="nav-link-bold font-bold">About</span>
+              <span className="nav-link-normal font-medium absolute inset-0 flex items-center justify-center">About</span>
+            </Link>
+            <div className="flex-1" />
             {loading ? (
               <div className="w-20 h-8" />
             ) : user ? (
               <div ref={profileRef} className="relative">
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-[#edffd3] transition-colors"
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-[#edffd3]/60 transition-colors"
                 >
                   <div className="w-8 h-8 bg-[#274a34] rounded-full flex items-center justify-center">
                     <span className="text-white text-xs font-bold">{initial}</span>
                   </div>
-                  <span className="text-sm font-medium text-[#274a34] max-w-[120px] truncate">{displayName}</span>
+                  <span className="relative text-sm text-[#274a34] max-w-[120px] truncate">
+                    <span className="nav-link-bold font-bold">{displayName}</span>
+                    <span className="nav-link-normal font-medium absolute inset-0">{displayName}</span>
+                  </span>
                   <svg className={`w-4 h-4 text-[#274a34] transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
@@ -194,8 +381,9 @@ export default function Header() {
               </div>
             ) : (
               <>
-                <Link href="/auth/login" className="px-4 py-2 text-sm font-medium text-[#274a34] hover:bg-[#edffd3] rounded-xl transition-colors">
-                  Sign in
+                <Link href="/auth/login" className="relative px-4 py-2 text-sm text-[#274a34] hover:bg-[#edffd3]/60 rounded-xl transition-colors">
+                  <span className="nav-link-bold font-bold">Sign in</span>
+                  <span className="nav-link-normal font-medium absolute inset-0 flex items-center justify-center">Sign in</span>
                 </Link>
                 <Link
                   href="/campaign/create"
@@ -210,32 +398,13 @@ export default function Header() {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 -mr-1 text-[#274a34] hover:bg-[#edffd3] rounded-xl transition-colors"
-            aria-label="Menu"
-          >
-            {isMenuOpen ? (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
-          </button>
         </div>
 
-        {/* Search overlay - centered in navbar */}
+        {/* Search overlay - centered in navbar, animated with GSAP */}
         <div
           ref={searchContainerRef}
-          className={`absolute inset-0 hidden md:flex items-center justify-center rounded-2xl transition-all duration-300 ${
-            isSearchOpen
-              ? 'opacity-100 pointer-events-auto bg-white/95 backdrop-blur-md'
-              : 'opacity-0 pointer-events-none'
-          }`}
+          className="absolute inset-0 hidden md:flex items-center justify-center rounded-2xl bg-white/95 backdrop-blur-md"
+          style={{ opacity: 0, pointerEvents: 'none', scale: '0.95' }}
         >
           <div className="flex items-center w-full max-w-md mx-6">
             <svg className="w-5 h-5 text-[#274a34]/40 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -248,7 +417,8 @@ export default function Header() {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearchKeyDown}
               placeholder="Search campaigns..."
-              className="flex-1 bg-transparent text-base text-[#274a34] placeholder-[#274a34]/40 outline-none px-3 py-2"
+              className="flex-1 bg-transparent text-base text-[#274a34] placeholder-[#274a34]/40 px-3 py-2"
+              style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
             />
             <button
               onClick={() => { setIsSearchOpen(false); setSearchQuery('') }}

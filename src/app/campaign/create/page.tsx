@@ -466,7 +466,7 @@ export default function CreateCampaignPage() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-[calc(100vh-5rem)] pt-24 flex items-center justify-center px-4">
+      <div className="min-h-[calc(100vh-5rem)] pt-4 flex items-center justify-center px-4">
         <div className="max-w-md text-center">
           <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -493,7 +493,7 @@ export default function CreateCampaignPage() {
   const heading = STEP_HEADINGS[step] || STEP_HEADINGS[3]
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] pt-24 flex flex-col lg:flex-row">
+    <div className="min-h-[calc(100vh-5rem)] pt-4 flex flex-col lg:flex-row">
       {/* Left Panel - Heading & Progress */}
       <div className="lg:w-[45%] bg-white px-8 py-12 lg:px-16 lg:py-20 flex flex-col justify-between">
         <div>

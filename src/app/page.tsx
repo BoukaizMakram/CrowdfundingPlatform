@@ -305,16 +305,18 @@ function HomeContent() {
 
         const bigCard = featuredRef.current.querySelector('.bento-big')
         if (bigCard) {
-          gsap.from(bigCard, {
-            opacity: 0, x: -80, scale: 0.95, duration: 1, ease: 'power3.out',
+          gsap.set(bigCard, { opacity: 0, x: -80, scale: 0.95 })
+          gsap.to(bigCard, {
+            opacity: 1, x: 0, scale: 1, duration: 1, ease: 'power3.out',
             scrollTrigger: { trigger: bigCard, start: 'top 85%', toggleActions: 'play none none none' },
           })
         }
 
         const smallCards = featuredRef.current.querySelectorAll('.bento-small')
         if (smallCards.length) {
-          gsap.from(smallCards, {
-            opacity: 0, x: 60, y: 30, scale: 0.92, duration: 0.8, stagger: 0.12, ease: 'power3.out',
+          gsap.set(smallCards, { opacity: 0, x: 60, y: 30, scale: 0.92 })
+          gsap.to(smallCards, {
+            opacity: 1, x: 0, y: 0, scale: 1, duration: 0.8, stagger: 0.12, ease: 'power3.out',
             scrollTrigger: { trigger: smallCards[0], start: 'top 88%', toggleActions: 'play none none none' },
           })
         }
@@ -419,12 +421,12 @@ function HomeContent() {
   const marqueeText = 'Sadaqah \u2022 Zakat \u2022 Waqf \u2022 Charity \u2022 Mosque \u2022 Education \u2022 Healthcare \u2022 Community \u2022 Orphans \u2022 Relief \u2022 '
 
   return (
-    <div ref={mainRef} className="bg-[#fafaf8]">
+    <div ref={mainRef} className="bg-[#fafaf8] -mt-[5.5rem]">
 
       {/* ════════ HERO ════════ */}
       <section
         ref={heroRef}
-        className="relative h-screen flex flex-col items-center justify-center overflow-hidden"
+        className="relative h-screen flex flex-col items-center justify-center overflow-hidden pt-24"
         style={{
           backgroundImage: 'url(/background.png)',
           backgroundSize: 'cover',
@@ -484,13 +486,13 @@ function HomeContent() {
       </section>
 
       {/* ════════ CAMPAIGNS (right after hero, fills the screen) ════════ */}
-      <section ref={campaignsRef} id="campaigns" className="min-h-screen flex flex-col justify-center py-16 bg-[#fafaf8]">
+      <section ref={campaignsRef} id="campaigns" className="min-h-screen flex flex-col justify-center pt-24 pb-16 bg-[#fafaf8] scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           {/* Header area */}
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4">
             <div>
-              <h2 className="section-heading text-3xl md:text-4xl font-black text-[#1a1a1a]">Discover campaigns</h2>
-              <p className="campaigns-subtitle mt-2 text-gray-500 text-base">
+              <h2 className="section-heading text-3xl md:text-4xl font-black text-[#1a1a1a] text-left">Discover campaigns</h2>
+              <p className="campaigns-subtitle mt-2 text-gray-500 text-base text-left">
                 Browse {allCampaigns.length > 0 ? allCampaigns.length : ''} campaigns making a real difference
               </p>
             </div>
@@ -595,12 +597,14 @@ function HomeContent() {
           </div>
 
           {featuredCampaigns.length > 0 && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 auto-rows-[200px] md:auto-rows-[220px]">
-              <div className="bento-big lg:col-span-1 lg:row-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:grid-rows-[250px_250px]">
+              {/* Large featured card — spans 2 rows on lg */}
+              <div className="bento-big sm:col-span-2 lg:col-span-1 lg:row-span-2 h-[360px] sm:h-[400px] lg:h-full">
                 <BentoCardLarge campaign={featuredCampaigns[0]} />
               </div>
+              {/* 4 smaller cards filling the remaining 2 columns */}
               {featuredCampaigns.slice(1, 5).map((campaign) => (
-                <div key={campaign.id} className="bento-small">
+                <div key={campaign.id} className="bento-small h-[220px] sm:h-[240px] lg:h-full">
                   <BentoCardSmall campaign={campaign} />
                 </div>
               ))}

@@ -40,7 +40,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 pt-24 pb-12">
+    <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 pt-4 pb-12">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">

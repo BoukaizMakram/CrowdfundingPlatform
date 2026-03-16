@@ -141,7 +141,7 @@ export default function SettingsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-[#fafaf8] pt-28 px-4">
+      <div className="min-h-screen bg-[#fafaf8] pt-8 px-4">
         <div className="max-w-2xl mx-auto animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-32" />
           <div className="h-64 bg-gray-200 rounded-xl" />
@@ -173,7 +173,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fafaf8] pt-28 pb-16 px-4">
+    <div className="min-h-screen bg-[#fafaf8] pt-8 pb-16 px-4">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Settings</h1>
         <p className="text-gray-500 text-sm mb-8">Manage your account and preferences</p>

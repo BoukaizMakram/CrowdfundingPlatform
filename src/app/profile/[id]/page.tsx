@@ -31,7 +31,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-28 pb-16">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 pb-16">
         <div className="animate-pulse">
           <div className="bg-white border border-gray-200 rounded-2xl p-8 mb-8">
             <div className="flex items-start gap-6">
@@ -55,7 +55,7 @@ export default function ProfilePage() {
 
   if (!profileUser) {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-28 pb-16 text-center">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 pb-16 text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">User Not Found</h1>
         <p className="text-gray-600 mb-8">This profile doesn&apos;t exist.</p>
         <Link href="/">
@@ -68,7 +68,7 @@ export default function ProfilePage() {
   const initial = profileUser.full_name?.[0]?.toUpperCase() || '?'
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-28 pb-16">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 pb-16">
       {/* Profile Header */}
       <div className="bg-white border border-gray-200 rounded-2xl p-8 mb-8">
         <div className="flex items-start gap-6">
