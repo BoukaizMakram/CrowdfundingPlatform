@@ -34,6 +34,12 @@
   opacity: 0;
 }
 
+/* Hide bento cards by default — GSAP scroll animation reveals them */
+.bento-big,
+.bento-small {
+  opacity: 0;
+}
+
 html.lenis, html.lenis body {
   height: auto;
 }
