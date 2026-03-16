@@ -34,7 +34,7 @@ export default function Header() {
 
     if (isHomePage) {
       nav.style.backdropFilter = 'none'
-      nav.style.webkitBackdropFilter = 'none'
+      nav.style.setProperty('-webkit-backdrop-filter', 'none')
       gsap.set(nav, {
         backgroundColor: 'rgba(255,255,255,0)',
         boxShadow: '0 0px 0px rgba(0,0,0,0)',
@@ -48,7 +48,7 @@ export default function Header() {
       })
     } else {
       nav.style.backdropFilter = 'blur(12px)'
-      nav.style.webkitBackdropFilter = 'blur(12px)'
+      nav.style.setProperty('-webkit-backdrop-filter', 'blur(12px)')
       gsap.set(nav, {
         backgroundColor: 'rgba(255,255,255,0.92)',
         boxShadow: '0 2px 20px rgba(0,0,0,0.08)',
@@ -65,7 +65,7 @@ export default function Header() {
     // If page loaded scrolled, apply scrolled state immediately
     if (window.scrollY > 50) {
       nav.style.backdropFilter = 'blur(12px)'
-      nav.style.webkitBackdropFilter = 'blur(12px)'
+      nav.style.setProperty('-webkit-backdrop-filter', 'blur(12px)')
       gsap.set(nav, {
         backgroundColor: 'rgba(255,255,255,0.92)',
         boxShadow: '0 2px 20px rgba(0,0,0,0.08)',
@@ -100,7 +100,7 @@ export default function Header() {
 
       if (shouldBeScrolled) {
         nav.style.backdropFilter = 'blur(12px)'
-        nav.style.webkitBackdropFilter = 'blur(12px)'
+        nav.style.setProperty('-webkit-backdrop-filter', 'blur(12px)')
         gsap.to(nav, {
           backgroundColor: 'rgba(255,255,255,0.92)',
           boxShadow: '0 2px 20px rgba(0,0,0,0.08)',
@@ -122,7 +122,7 @@ export default function Header() {
       } else {
         if (isHomePage) {
           nav.style.backdropFilter = 'none'
-          nav.style.webkitBackdropFilter = 'none'
+          nav.style.setProperty('-webkit-backdrop-filter', 'none')
         }
         gsap.to(nav, {
           backgroundColor: isHomePage ? 'rgba(255,255,255,0)' : 'rgba(255,255,255,0.92)',
