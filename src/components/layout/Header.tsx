@@ -288,7 +288,7 @@ export default function Header() {
 
           {/* Right nav links (after search) + auth */}
           <div className="hidden md:flex items-center flex-1 gap-1">
-            <Link href="#" className="relative px-4 py-2 text-sm text-[#274a34] hover:bg-[#edffd3]/60 rounded-xl transition-colors">
+            <Link href="/about" className="relative px-4 py-2 text-sm text-[#274a34] hover:bg-[#edffd3]/60 rounded-xl transition-colors">
               <span className="nav-link-bold font-bold">About</span>
               <span className="nav-link-normal font-medium absolute inset-0 flex items-center justify-center">About</span>
             </Link>
@@ -470,7 +470,7 @@ export default function Header() {
             <Link href="/campaign/create" className="block text-[#274a34] font-medium py-2.5 px-3 rounded-xl hover:bg-[#edffd3] transition-colors" onClick={() => setIsMenuOpen(false)}>
               FundRaise
             </Link>
-            <Link href="#" className="block text-[#274a34] font-medium py-2.5 px-3 rounded-xl hover:bg-[#edffd3] transition-colors" onClick={() => setIsMenuOpen(false)}>
+            <Link href="/about" className="block text-[#274a34] font-medium py-2.5 px-3 rounded-xl hover:bg-[#edffd3] transition-colors" onClick={() => setIsMenuOpen(false)}>
               About
             </Link>
 

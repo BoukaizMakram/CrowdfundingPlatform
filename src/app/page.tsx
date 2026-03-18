@@ -198,6 +198,10 @@ function HomeContent() {
     if (loading || !campaignsRef.current) return
 
     const ctx = gsap.context(() => {
+      // Reveal the wrapper — individual children start hidden via gsap.set below
+      const contentWrap = campaignsRef.current!.querySelector('.campaigns-content')
+      if (contentWrap) gsap.set(contentWrap, { opacity: 1 })
+
       // ── CAMPAIGNS: pinned with staggered reveals ──
       const campaignsTl = gsap.timeline({
         scrollTrigger: {
@@ -487,7 +491,7 @@ function HomeContent() {
 
       {/* ════════ CAMPAIGNS (right after hero, fills the screen) ════════ */}
       <section ref={campaignsRef} id="campaigns" className="min-h-screen flex flex-col justify-center pt-24 pb-16 bg-[#fafaf8] scroll-mt-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="campaigns-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full" style={{ opacity: 0 }}>
           {/* Header area */}
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4">
             <div>
